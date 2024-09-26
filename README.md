@@ -1,12 +1,13 @@
 # LEVIATAN-ProyectoAmerinst
 
-## Versiones de los componentes
+### Construido con
 
-- **Laravel**: 10 o superior
-- **React**: 18
-- **PHP**: 8.2 o superior
-- **Node**: 18 o superior
-- **Composer**: 2.7.9 o superior
+- ![Laravel](https://img.shields.io/badge/LARAVEL-v10_o_Superior-red?style=flat-square)
+- ![React](https://img.shields.io/badge/REACT-v18-blue?style=flat-square)
+- ![PHP](https://img.shields.io/badge/PHP-v8.2_o_superior-darkmagenta?style=flat-square)
+- ![Node](https://img.shields.io/badge/NODE-v18_o_superior-darkyellow?style=flat-square)
+- ![Composer](https://img.shields.io/badge/COMPOSER-v2.7.9_o_superior-yellow?style=flat-square)
+
 
 ## Instrucciones para ejecutar el proyecto
 
