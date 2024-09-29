@@ -110,8 +110,14 @@
             <input type="search" placeholder="Buscar...">
         </div>
         <div class="actions">
-            <a href="#">Sign Up</a>
-            <a href="#">Sign In</a>
+            <a href="{{ route('CrudPadres') }}">Sign Up</a>
+            <a href="{{ route('login') }}">Sign In</a>
+            <a href="{{ route('loginAdministradores') }}">Login Administradores</a>
+            <a href="{{ route('crudAdministradores') }}">CRUD Administradores</a>
+            <a href="{{ route('crudAdministrativos') }}">CRUD Administrarivos</a>
+            <a href="{{ route('loginAdministrativos') }}">Login Administrativos</a>
+
+            
             <!-- Cambio de idioma -->
             <select class="language-select">
                 <option value="es">Español</option>
@@ -154,7 +160,8 @@
         <h2>Contacto</h2>
         <p>Av. 20 de octubre N°1928<br>Teléfonos: 242 3046 – 242 3352 – 242 4121</p>
         <p>
-            <a href="https://www.facebook.com/profile.php?id=61564139076612&locale=es_LA" target="_blank">Facebook</a>
+            <a href="https://www.facebook.com/profile.php?id=61564139076612&locale=es_LA" target="_blank">Facebook</a> |
+
         </p>
     </div>
 
