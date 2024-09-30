@@ -2,10 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NotaController;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\EstudianteController;
+use App\Http\Controllers\NotificacionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +44,24 @@ Route::post('/materias', [MateriaController::class, 'store']);
 Route::get('/materias/{id}', [MateriaController::class, 'show']);
 Route::put('/materias/{id}', [MateriaController::class, 'update']);
 Route::delete('/materias/{id}', [MateriaController::class, 'destroy']);
+/* Nota */
+Route::get('/notas', [NotaController::class, 'apiIndex']);
+Route::post('/notas', [NotaController::class, 'store']);
+Route::get('/notas/{id}', [NotaController::class, 'show']);
+Route::put('/notas/{id}', [NotaController::class, 'update']);
+Route::delete('/notas/{id}', [NotaController::class, 'destroy']);
+/* Asistencia */
+Route::get('/asistencias', [AsistenciaController::class, 'apiIndex']);
+Route::post('/asistencias',[AsistenciaController::class, 'store']);
+Route::get('/asistencias/{id}', [AsistenciaController::class, 'show']);
+Route::put('/asistencias/{id}', [AsistenciaController::class, 'update']);
+Route::delete('/asistencias/{id}', [AsistenciaController::class, 'destroy']);
+/* Notificacion */
+Route::get('/notificaciones', [NotificacionController::class, 'apiIndex']);
+Route::post('/notificaciones',[NotificacionController::class, 'store']);
+Route::get('/notificaciones/{id}', [NotificacionController::class, 'show']);
+Route::put('/notificaciones/{id}', [NotificacionController::class, 'update']);
+Route::delete('/notificaciones/{id}', [NotificacionController::class, 'destroy']);
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

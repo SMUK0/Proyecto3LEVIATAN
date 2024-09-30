@@ -1,10 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NotaController;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\EstudianteController;
+use App\Http\Controllers\NotificacionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +27,14 @@ Route::get('/estudiantes', [EstudianteController::class, 'index']);
 Route::get('/cursos', [CursoController::class, 'index']);
 /* Materia */
 Route::get('/materias', [MateriaController::class, 'index']);
+/* Nota */
+Route::get('/notas', [NotaController::class, 'index']);
+/* Asistencia */
+Route::get('/asistencias', [AsistenciaController::class, 'index']);
+/* Notificacion */
+Route::get('/notificaciones', [NotificacionController::class, 'index']);
+
+
 
 Route::get('/', function () {
     return view('welcome');
