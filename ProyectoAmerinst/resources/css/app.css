@@ -1,0 +1,41 @@
+/* Ajustar el espaciado del contenedor */
+.container {
+    margin-top: 50px;
+}
+
+/* Ajustes a la tabla */
+.table {
+    margin-top: 20px;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+/* Modal personalizado */
+.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    padding: 1rem 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+/* Botón de cierre del modal */
+.btn-close {
+    background-color: transparent;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: white;
+    cursor: pointer;
+}
+
+.btn-close:hover {
+    color: #ccc;
+}

@@ -11,14 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        /* Schema::create('materias', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        }); */
         Schema::create('materias', function (Blueprint $table) {
-            $table->id(); // materia_id
-            $table->string('nombre')->unique();
-            $table->timestamps();
+            $table->id('materia_id');
+            $table->string('nombre', 100)->unique();
         });
     }
 

@@ -11,18 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        /* Schema::create('estudiantes', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        }); */
         Schema::create('estudiantes', function (Blueprint $table) {
-            $table->id(); // estudiante_id
-            $table->string('nombre');
-            $table->string('apellido');
+            $table->id('estudiante_id');  // bigint unsigned
+            $table->string('nombre', 100);
+            $table->string('apellido', 100);
             $table->date('fecha_nacimiento');
-            $table->string('grado');
-            $table->timestamps();
+            $table->string('grado', 50);
         });
+        
     }
 
     /**

@@ -2,24 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Usuario extends Authenticatable
+class Usuario extends Model
 {
-    /* use HasFactory; */
+    use HasFactory;
+    protected $table = 'usuarios';
+    
+    protected $primaryKey = 'user_id';
+
     protected $fillable = [
-        'nombre', 'apellido', 'email', 'password_hash', 'rol_id',
+        'nombre', 'apellido', 'email', 'password_hash', 'rol_id'
     ];
 
-    public function rol()
-    {
-        return $this->belongsTo(Role::class);
-    }
-
-    public function estudiantes()
-    {
-        return $this->hasManyThrough(Estudiante::class, EstudiantePadre::class, 'padre_id', 'estudiante_id');
-    }
+    public $timestamps = false;  // Si no usas timestamps de Laravel (created_at, updated_at)
 }

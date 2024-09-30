@@ -7,17 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Estudiante extends Model
 {
-    protected $fillable = [
-        'nombre', 'apellido', 'fecha_nacimiento', 'grado',
-    ];
+    use HasFactory;
 
-    public function padres()
-    {
-        return $this->belongsToMany(Usuario::class, 'estudiante_padre', 'estudiante_id', 'padre_id');
-    }
+    // Tabla asociada al modelo
+    protected $table = 'estudiantes';
 
-    public function notas()
-    {
-        return $this->hasMany(Nota::class);
-    }
+    // Clave primaria
+    protected $primaryKey = 'estudiante_id';
+
+    // Desactivar timestamps automáticos
+    public $timestamps = false;
+
+    // Campos que son asignables masivamente
+    protected $fillable = ['nombre', 'apellido', 'fecha_nacimiento', 'grado'];
 }

@@ -11,18 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        /* Schema::create('asistencias', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        }); */
         Schema::create('asistencias', function (Blueprint $table) {
-            $table->id(); // asistencia_id
-            $table->foreignId('estudiante_id')->constrained('estudiantes')->onDelete('cascade');
-            $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
+            $table->id('asistencia_id');
+            $table->unsignedBigInteger('estudiante_id');  // Debe ser unsignedBigInteger
+            $table->unsignedBigInteger('curso_id');
+
+            $table->foreign('estudiante_id')->references('estudiante_id')->on('estudiantes')->onDelete('cascade');
+            $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
             $table->date('fecha');
-            $table->string('estado'); // Presente, Ausente, Tarde
+            $table->string('estado', 20); // Presente, Ausente, Tarde
             $table->text('observaciones')->nullable();
-            $table->timestamps();
         });
     }
 
