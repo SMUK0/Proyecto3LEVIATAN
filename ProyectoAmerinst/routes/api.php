@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CursoController;
+use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\EstudianteController;
 
@@ -34,6 +35,14 @@ Route::post('/cursos', [CursoController::class, 'store']);
 Route::get('/cursos/{id}', [CursoController::class, 'show']);
 Route::put('/cursos/{id}', [CursoController::class, 'update']);
 Route::delete('/cursos/{id}', [CursoController::class, 'destroy']);
+/* Materia */
+Route::get('/materias', [MateriaController::class, 'apiIndex']);
+Route::post('/materias', [MateriaController::class, 'store']);
+Route::get('/materias/{id}', [MateriaController::class, 'show']);
+Route::put('/materias/{id}', [MateriaController::class, 'update']);
+Route::delete('/materias/{id}', [MateriaController::class, 'destroy']);
+
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
