@@ -8,6 +8,8 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\EstudianteController;
 use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\MaestroCursosController;
+use App\Http\Controllers\EstudiantePadresController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +35,10 @@ Route::get('/notas', [NotaController::class, 'index']);
 Route::get('/asistencias', [AsistenciaController::class, 'index']);
 /* Notificacion */
 Route::get('/notificaciones', [NotificacionController::class, 'index']);
+/* Maestro-Cursos */
+Route::get('/maestro-cursos', [MaestroCursosController::class, 'index']);
+/* Estudiante-Padres */
+Route::get('/estudiante-padres', [EstudiantePadresController::class, 'index']);
 
 
 

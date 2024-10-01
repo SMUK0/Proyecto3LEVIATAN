@@ -8,7 +8,9 @@ use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\EstudianteController;
+use App\Http\Controllers\EstudiantePadresController;
 use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\MaestroCursosController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,6 +64,21 @@ Route::post('/notificaciones',[NotificacionController::class, 'store']);
 Route::get('/notificaciones/{id}', [NotificacionController::class, 'show']);
 Route::put('/notificaciones/{id}', [NotificacionController::class, 'update']);
 Route::delete('/notificaciones/{id}', [NotificacionController::class, 'destroy']);
+/* Maestro-Cursos */
+Route::get('/maestro-cursos', [MaestroCursosController::class, 'apiIndex']);
+Route::post('/maestro-cursos',[MaestroCursosController::class, 'store']);
+Route::get('/maestro-cursos/{maestro_id}/{curso_id}', [MaestroCursosController::class, 'show']);
+Route::put('/maestro-cursos/{maestro_id}/{curso_id}', [MaestroCursosController::class, 'update']);
+Route::delete('/maestro-cursos/{maestro_id}/{curso_id}', [MaestroCursosController::class, 'destroy']);
+
+/* Estudiante-Padres */
+Route::get('/estudiante-padres', [EstudiantePadresController::class, 'apiIndex']);
+Route::post('/estudiante-padres',[EstudiantePadresController::class, 'store']);
+Route::get('/estudiante-padres/{maestro_id}/{curso_id}', [EstudiantePadresController::class, 'show']);
+Route::put('/estudiante-padres/{estudiante_id}/{padre_id}', [EstudiantePadresController::class, 'update']);
+Route::delete('/estudiante-padres/{estudiante_id}/{padre_id}', [EstudiantePadresController::class, 'destroy']);
+
+
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
