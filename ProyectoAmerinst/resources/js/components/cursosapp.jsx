@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';  // Importar FontAwesome
-import '../../css/app.css';  // Importar tu archivo CSS
-import Swal from 'sweetalert2'; // Importar SweetAlert2
+import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Importar estilos de Toastify
-import 'sweetalert2/dist/sweetalert2.min.css';  // Importar estilos de SweetAlert2
 
-const App = () => {
+const CursosApp = () => {
     const [cursos, setCursos] = useState([]);
     const [form, setForm] = useState({
         nombre: '',
@@ -19,7 +14,6 @@ const App = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-    // Obtener todos los cursos al cargar la página
     useEffect(() => {
         fetch('/api/cursos')
             .then(response => response.json())
@@ -27,7 +21,6 @@ const App = () => {
             .catch(() => toast.error("Error al cargar cursos"));
     }, []);
 
-    // Manejar cambios en los inputs del formulario
     const handleChange = (e) => {
         setForm({
             ...form,
@@ -35,7 +28,6 @@ const App = () => {
         });
     };
 
-    // Crear o actualizar un curso
     const handleSubmit = (e) => {
         e.preventDefault();
         setLoading(true);
@@ -69,7 +61,6 @@ const App = () => {
         .finally(() => setLoading(false));
     };
 
-    // Editar un curso
     const handleEdit = (curso) => {
         setForm({
             nombre: curso.nombre,
@@ -80,15 +71,12 @@ const App = () => {
         setShowModal(true);
     };
 
-    // Eliminar un curso con SweetAlert2
     const handleDelete = (id) => {
         Swal.fire({
             title: '¿Estás seguro?',
             text: "No podrás revertir esto!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
             confirmButtonText: 'Sí, eliminar!',
             cancelButtonText: 'Cancelar'
         }).then((result) => {
@@ -108,7 +96,6 @@ const App = () => {
         });
     };
 
-    // Cerrar el modal
     const handleCloseModal = () => {
         setShowModal(false);
         setForm({ nombre: '', grado: '' });
@@ -116,28 +103,15 @@ const App = () => {
     };
 
     return (
-        <div className="container mt-4">
-            <h1 className="text-center mb-4">CRUD Cursos</h1>
+        <div>
+            {loading && <div>Cargando...</div>}
 
-            {/* Spinner de carga */}
-            {loading && (
-                <div className="d-flex justify-content-center mb-4">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="sr-only">Cargando...</span>
-                    </div>
-                </div>
-            )}
-
-            {/* Botón para abrir el modal de agregar */}
-            <div className="d-flex justify-content-end mb-3">
-                <button className="btn btn-success" onClick={() => setShowModal(true)}>
-                    <i className="fas fa-plus"></i> Agregar Curso
-                </button>
+            <div>
+                <button onClick={() => setShowModal(true)}>Agregar Curso</button>
             </div>
 
-            {/* Tabla de cursos */}
-            <table className="table table-striped table-hover">
-                <thead className="table-success">
+            <table>
+                <thead>
                     <tr>
                         <th>ID</th>
                         <th>Nombre</th>
@@ -152,51 +126,53 @@ const App = () => {
                             <td>{curso.nombre}</td>
                             <td>{curso.grado}</td>
                             <td>
-                                <button className="btn btn-warning me-2" onClick={() => handleEdit(curso)}>
-                                    <i className="fas fa-edit"></i>
-                                </button>
-                                <button className="btn btn-danger" onClick={() => handleDelete(curso.curso_id)}>
-                                    <i className="fas fa-trash"></i>
-                                </button>
+                                <button onClick={() => handleEdit(curso)}>Editar</button>
+                                <button onClick={() => handleDelete(curso.curso_id)}>Eliminar</button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
 
-            {/* Modal de agregar/editar */}
             {showModal && (
-                <div className="modal fade show d-block" tabIndex="-1" role="dialog">
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content">
-                            <div className="modal-header bg-primary text-white">
-                                <h5 className="modal-title">{editMode ? 'Editar Curso' : 'Agregar Curso'}</h5>
-                                <button className="btn-close text-white" onClick={handleCloseModal}></button>
-                            </div>
-                            <div className="modal-body">
-                                <form onSubmit={handleSubmit}>
-                                    <div className="mb-3">
-                                        <label className="form-label">Nombre</label>
-                                        <input type="text" name="nombre" className="form-control" value={form.nombre} onChange={handleChange} required />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Grado</label>
-                                        <input type="text" name="grado" className="form-control" value={form.grado} onChange={handleChange} required />
-                                    </div>
-                                    <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                                        {editMode ? 'Actualizar Curso' : 'Agregar Curso'}
-                                    </button>
-                                </form>
-                            </div>
+                <div>
+                    <div>
+                        <div>
+                            <h5>{editMode ? 'Editar Curso' : 'Agregar Curso'}</h5>
+                            <button onClick={handleCloseModal}>Cerrar</button>
+                        </div>
+                        <div>
+                            <form onSubmit={handleSubmit}>
+                                <div>
+                                    <label>Nombre</label>
+                                    <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+                                </div>
+                                <div>
+                                    <label>Grado</label>
+                                    <input type="text" name="grado" value={form.grado} onChange={handleChange} required />
+                                </div>
+                                <button type="submit" disabled={loading}>
+                                    {editMode ? 'Actualizar Curso' : 'Agregar Curso'}
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Contenedor de notificaciones */}
             <ToastContainer />
         </div>
     );
 };
 
-ReactDOM.createRoot(document.getElementById('crud-curso')).render(<App />);
+// Montaje manual para pruebas
+window.onload = () => {
+    const rootElement = document.getElementById('crud-curso');
+    if (rootElement) {
+        ReactDOM.createRoot(rootElement).render(<CursosApp />);
+    } else {
+        console.error("No se encontró el contenedor con id 'crud-curso'");
+    }
+};
+
+export default CursosApp;

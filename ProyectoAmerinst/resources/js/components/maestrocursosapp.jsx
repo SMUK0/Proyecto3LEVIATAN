@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import '../../css/app.css';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import 'sweetalert2/dist/sweetalert2.min.css';
 
 const App = () => {
     const [maestroCursos, setMaestroCursos] = useState([]);
@@ -18,7 +13,6 @@ const App = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-    // Obtener todos los registros de maestro-curso al cargar la página
     useEffect(() => {
         fetch('/api/maestro-cursos')
             .then(response => response.json())
@@ -26,7 +20,6 @@ const App = () => {
             .catch(() => toast.error("Error al cargar maestro-cursos"));
     }, []);
 
-    // Manejar cambios en los inputs del formulario
     const handleChange = (e) => {
         setForm({
             ...form,
@@ -34,7 +27,6 @@ const App = () => {
         });
     };
 
-    // Crear o actualizar un registro de maestro-curso
     const handleSubmit = (e) => {
         e.preventDefault();
         setLoading(true);
@@ -66,7 +58,6 @@ const App = () => {
         .finally(() => setLoading(false));
     };
 
-    // Editar un maestro-curso
     const handleEdit = (maestroCurso) => {
         setForm({
             maestro_id: maestroCurso.maestro_id,
@@ -76,15 +67,12 @@ const App = () => {
         setShowModal(true);
     };
 
-    // Eliminar un maestro-curso
     const handleDelete = (maestro_id, curso_id) => {
         Swal.fire({
             title: '¿Estás seguro?',
             text: "No podrás revertir esto!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
             confirmButtonText: 'Sí, eliminar!',
             cancelButtonText: 'Cancelar'
         }).then((result) => {
@@ -102,7 +90,6 @@ const App = () => {
         });
     };
 
-    // Cerrar el modal
     const handleCloseModal = () => {
         setShowModal(false);
         setForm({ maestro_id: '', curso_id: '' });
@@ -110,28 +97,17 @@ const App = () => {
     };
 
     return (
-        <div className="container mt-4">
-            <h1 className="text-center mb-4">CRUD Maestro Cursos</h1>
+        <div>
+            <h1>CRUD Maestro Cursos</h1>
 
-            {/* Spinner de carga */}
-            {loading && (
-                <div className="d-flex justify-content-center mb-4">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="sr-only">Cargando...</span>
-                    </div>
-                </div>
-            )}
+            {loading && <div>Cargando...</div>}
 
-            {/* Botón para abrir el modal de agregar */}
-            <div className="d-flex justify-content-end mb-3">
-                <button className="btn btn-success" onClick={() => setShowModal(true)}>
-                    <i className="fas fa-plus"></i> Agregar Maestro-Curso
-                </button>
+            <div>
+                <button onClick={() => setShowModal(true)}>Agregar Maestro-Curso</button>
             </div>
 
-            {/* Tabla de maestro-cursos */}
-            <table className="table table-striped table-hover">
-                <thead className="table-success">
+            <table>
+                <thead>
                     <tr>
                         <th>Maestro ID</th>
                         <th>Curso ID</th>
@@ -144,48 +120,40 @@ const App = () => {
                             <td>{mc.maestro_id}</td>
                             <td>{mc.curso_id}</td>
                             <td>
-                                <button className="btn btn-warning me-2" onClick={() => handleEdit(mc)}>
-                                    <i className="fas fa-edit"></i>
-                                </button>
-                                <button className="btn btn-danger" onClick={() => handleDelete(mc.maestro_id, mc.curso_id)}>
-                                    <i className="fas fa-trash"></i>
-                                </button>
+                                <button onClick={() => handleEdit(mc)}>Editar</button>
+                                <button onClick={() => handleDelete(mc.maestro_id, mc.curso_id)}>Eliminar</button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
 
-            {/* Modal de agregar/editar */}
             {showModal && (
-                <div className="modal fade show d-block" tabIndex="-1" role="dialog">
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content">
-                            <div className="modal-header bg-primary text-white">
-                                <h5 className="modal-title">{editMode ? 'Editar Maestro-Curso' : 'Agregar Maestro-Curso'}</h5>
-                                <button className="btn-close text-white" onClick={handleCloseModal}></button>
-                            </div>
-                            <div className="modal-body">
-                                <form onSubmit={handleSubmit}>
-                                    <div className="mb-3">
-                                        <label className="form-label">Maestro ID</label>
-                                        <input type="number" name="maestro_id" className="form-control" value={form.maestro_id} onChange={handleChange} required />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Curso ID</label>
-                                        <input type="number" name="curso_id" className="form-control" value={form.curso_id} onChange={handleChange} required />
-                                    </div>
-                                    <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                                        {editMode ? 'Actualizar Maestro-Curso' : 'Agregar Maestro-Curso'}
-                                    </button>
-                                </form>
-                            </div>
+                <div>
+                    <div>
+                        <div>
+                            <h5>{editMode ? 'Editar Maestro-Curso' : 'Agregar Maestro-Curso'}</h5>
+                            <button onClick={handleCloseModal}>Cerrar</button>
+                        </div>
+                        <div>
+                            <form onSubmit={handleSubmit}>
+                                <div>
+                                    <label>Maestro ID</label>
+                                    <input type="number" name="maestro_id" value={form.maestro_id} onChange={handleChange} required />
+                                </div>
+                                <div>
+                                    <label>Curso ID</label>
+                                    <input type="number" name="curso_id" value={form.curso_id} onChange={handleChange} required />
+                                </div>
+                                <button type="submit" disabled={loading}>
+                                    {editMode ? 'Actualizar Maestro-Curso' : 'Agregar Maestro-Curso'}
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Notificaciones y alertas */}
             <ToastContainer />
         </div>
     );

@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import '../../css/app.css';
 import Swal from 'sweetalert2';
 
 const App = () => {
@@ -12,7 +9,6 @@ const App = () => {
     const [editIds, setEditIds] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    // Obtener todas las relaciones estudiante-padre
     useEffect(() => {
         fetch('/api/estudiante-padre')
             .then(response => response.json())
@@ -20,12 +16,10 @@ const App = () => {
             .catch(() => Swal.fire('Error', 'Error al cargar relaciones', 'error'));
     }, []);
 
-    // Manejar cambios en el formulario
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    // Crear o actualizar una relación estudiante-padre
     const handleSubmit = (e) => {
         e.preventDefault();
         setLoading(true);
@@ -56,23 +50,20 @@ const App = () => {
             .finally(() => setLoading(false));
     };
 
-    // Editar relación estudiante-padre
     const handleEdit = (relacion) => {
         setForm({ estudiante_id: relacion.estudiante_id, padre_id: relacion.padre_id });
         setEditIds({ estudiante_id: relacion.estudiante_id, padre_id: relacion.padre_id });
         setEditMode(true);
     };
 
-    // Eliminar relación estudiante-padre
     const handleDelete = (estudiante_id, padre_id) => {
         Swal.fire({
             title: '¿Estás seguro?',
             text: "Esta acción no puede deshacerse",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminar'
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
                 fetch(`/api/estudiante-padre/${estudiante_id}/${padre_id}`, { method: 'DELETE' })
@@ -86,12 +77,12 @@ const App = () => {
     };
 
     return (
-        <div className="container mt-5">
-            <h1 className="text-center mb-4">CRUD Estudiante-Padres</h1>
+        <div>
+            <h1>CRUD Estudiante-Padres</h1>
 
-            <button className="btn btn-success mb-3" onClick={() => setEditMode(false)}>Agregar Relación</button>
+            <button onClick={() => setEditMode(false)}>Agregar Relación</button>
 
-            <table className="table table-striped">
+            <table>
                 <thead>
                     <tr>
                         <th>Estudiante ID</th>
@@ -105,8 +96,8 @@ const App = () => {
                             <td>{relacion.estudiante_id}</td>
                             <td>{relacion.padre_id}</td>
                             <td>
-                                <button className="btn btn-warning me-2" onClick={() => handleEdit(relacion)}>Editar</button>
-                                <button className="btn btn-danger" onClick={() => handleDelete(relacion.estudiante_id, relacion.padre_id)}>Eliminar</button>
+                                <button onClick={() => handleEdit(relacion)}>Editar</button>
+                                <button onClick={() => handleDelete(relacion.estudiante_id, relacion.padre_id)}>Eliminar</button>
                             </td>
                         </tr>
                     ))}
@@ -115,15 +106,15 @@ const App = () => {
 
             {editMode && (
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label className="form-label">Estudiante ID</label>
-                        <input type="text" name="estudiante_id" value={form.estudiante_id} onChange={handleChange} className="form-control" required />
+                    <div>
+                        <label>Estudiante ID</label>
+                        <input type="text" name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required />
                     </div>
-                    <div className="mb-3">
-                        <label className="form-label">Padre ID</label>
-                        <input type="text" name="padre_id" value={form.padre_id} onChange={handleChange} className="form-control" required />
+                    <div>
+                        <label>Padre ID</label>
+                        <input type="text" name="padre_id" value={form.padre_id} onChange={handleChange} required />
                     </div>
-                    <button type="submit" className="btn btn-primary">{editMode ? 'Actualizar' : 'Agregar'}</button>
+                    <button type="submit">{editMode ? 'Actualizar' : 'Agregar'}</button>
                 </form>
             )}
         </div>
