@@ -3,12 +3,14 @@ import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
 
-const App = () => {
+const AsistenciasApp = () => {
     const [asistencias, setAsistencias] = useState([]);
+    const [estudiantes, setEstudiantes] = useState([]);
+    const [cursos, setCursos] = useState([]);
     const [form, setForm] = useState({
         estudiante_id: '',
         curso_id: '',
-        fecha: '',
+        fecha: new Date().toISOString().split('T')[0], // Fecha actual en formato YYYY-MM-DD
         estado: '',
         observaciones: ''
     });
@@ -17,11 +19,37 @@ const App = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
+    // Obtener el token CSRF desde el meta tag del HTML
+    const getCsrfToken = () => {
+        const token = document.querySelector('meta[name="csrf-token"]');
+        return token ? token.getAttribute('content') : '';
+    };
+
+    // Cargar asistencias, estudiantes y cursos al iniciar
     useEffect(() => {
         fetch('/api/asistencias')
             .then(response => response.json())
             .then(data => setAsistencias(data))
-            .catch(() => toast.error("Error al cargar asistencias"));
+            .catch((error) => {
+                console.log("Error al cargar asistencias:", error);
+                toast.error("Error al cargar asistencias");
+            });
+
+        fetch('/api/estudiantes')  // API para obtener los estudiantes
+            .then(response => response.json())
+            .then(data => setEstudiantes(data))
+            .catch((error) => {
+                console.log("Error al cargar estudiantes:", error);
+                toast.error("Error al cargar estudiantes");
+            });
+
+        fetch('/api/cursos')  // API para obtener los cursos
+            .then(response => response.json())
+            .then(data => setCursos(data))
+            .catch((error) => {
+                console.log("Error al cargar cursos:", error);
+                toast.error("Error al cargar cursos");
+            });
     }, []);
 
     const handleChange = (e) => {
@@ -34,18 +62,33 @@ const App = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         setLoading(true);
-
+    
         const method = editMode ? 'PUT' : 'POST';
-        const url = editMode ? `/api/asistencias/${editId}` : '/api/asistencias';
-
+        const url = editMode ? `/api/asistencias/${editId}` : `/api/asistencias`;
+    
         fetch(url, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken() // Incluye el token CSRF en la solicitud
             },
             body: JSON.stringify(form)
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log("Respuesta del servidor completa:", response);
+            if (!response.ok) {
+                return response.text().then(text => {
+                    // Verifica si la respuesta es HTML (normalmente en casos de redireccionamiento)
+                    if (text.startsWith('<!DOCTYPE html>')) {
+                        console.error("Se recibió HTML en lugar de JSON. Posible redireccionamiento o error del servidor.");
+                        throw new Error("Error inesperado: El servidor devolvió HTML en lugar de JSON.");
+                    }
+                    console.error("Respuesta no válida, cuerpo del servidor:", text);
+                    throw new Error(text);
+                });
+            }
+            return response.json(); // Si no es redireccionado, intenta parsear el JSON
+        })
         .then(data => {
             if (editMode) {
                 setAsistencias(asistencias.map(asistencia => asistencia.asistencia_id === editId ? data : asistencia));
@@ -55,12 +98,17 @@ const App = () => {
                 toast.success("Asistencia agregada exitosamente");
             }
             setShowModal(false);
-            setForm({ estudiante_id: '', curso_id: '', fecha: '', estado: '', observaciones: '' });
+            setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: '', observaciones: '' });
             setEditMode(false);
         })
-        .catch(() => toast.error("Error al crear o actualizar la asistencia"))
+        .catch((error) => {
+            console.log("Error al crear o actualizar la asistencia:", error);
+            toast.error("Error al crear o actualizar la asistencia: " + error.message);
+        })
         .finally(() => setLoading(false));
     };
+    
+    
 
     const handleEdit = (asistencia) => {
         setForm({
@@ -86,13 +134,16 @@ const App = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 setLoading(true);
-                fetch(`/api/asistencias/${id}`, { method: 'DELETE' })
+                fetch(`/api/asistencias/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': getCsrfToken() } })
                 .then(() => {
                     setAsistencias(asistencias.filter(asistencia => asistencia.asistencia_id !== id));
                     toast.success("Asistencia eliminada exitosamente");
                     Swal.fire('Eliminado!', 'La asistencia ha sido eliminada.', 'success');
                 })
-                .catch(() => toast.error("Error al eliminar la asistencia"))
+                .catch((error) => {
+                    console.log("Error al eliminar la asistencia:", error);
+                    toast.error("Error al eliminar la asistencia");
+                })
                 .finally(() => setLoading(false));
             }
         });
@@ -100,7 +151,7 @@ const App = () => {
 
     const handleCloseModal = () => {
         setShowModal(false);
-        setForm({ estudiante_id: '', curso_id: '', fecha: '', estado: '', observaciones: '' });
+        setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: '', observaciones: '' });
         setEditMode(false);
     };
 
@@ -150,16 +201,30 @@ const App = () => {
                         <div>
                             <form onSubmit={handleSubmit}>
                                 <div>
-                                    <label>ID Estudiante</label>
-                                    <input type="number" name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required />
+                                    <label>Estudiante</label>
+                                    <select name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required>
+                                        <option value="">Seleccione un estudiante</option>
+                                        {estudiantes.map(estudiante => (
+                                            <option key={estudiante.estudiante_id} value={estudiante.estudiante_id}>
+                                                {estudiante.nombre} {estudiante.apellido}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
-                                    <label>ID Curso</label>
-                                    <input type="number" name="curso_id" value={form.curso_id} onChange={handleChange} required />
+                                    <label>Curso</label>
+                                    <select name="curso_id" value={form.curso_id} onChange={handleChange} required>
+                                        <option value="">Seleccione un curso</option>
+                                        {cursos.map(curso => (
+                                            <option key={curso.curso_id} value={curso.curso_id}>
+                                                {curso.nombre}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label>Fecha</label>
-                                    <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
+                                    <input type="date" name="fecha" value={form.fecha} readOnly />
                                 </div>
                                 <div>
                                     <label>Estado</label>
@@ -187,4 +252,14 @@ const App = () => {
     );
 };
 
-ReactDOM.createRoot(document.getElementById('crud-asistencias')).render(<App />);
+// Monta el componente en el div con id="crud-asistencias"
+window.onload = () => {
+    const rootElement = document.getElementById('crud-asistencias');
+    if (rootElement) {
+        ReactDOM.createRoot(rootElement).render(<AsistenciasApp />);
+    } else {
+        console.error("No se encontró el contenedor con id 'crud-asistencias'");
+    }
+};
+
+export default AsistenciasApp;

@@ -30,6 +30,11 @@ Route::get('/login', function () {
 Route::get('/administrador', function () {
     return view('view_administrador');
 });
+/* Vista Maestro */
+Route::get('/maestro', function () {
+    return view('view_maestro');
+});
+
 /* Usuario */
 Route::get('/usuarios', [UsuarioController::class, 'index']);
 /* Estudiante */

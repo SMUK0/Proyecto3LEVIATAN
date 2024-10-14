@@ -5,6 +5,8 @@ import { ToastContainer, toast } from 'react-toastify';
 
 const App = () => {
     const [notificaciones, setNotificaciones] = useState([]);
+    const [usuarios, setUsuarios] = useState([]); // Para almacenar los usuarios con rol de Padre
+    const [estudiantes, setEstudiantes] = useState([]); // Para almacenar los estudiantes
     const [form, setForm] = useState({
         usuario_id: '',
         estudiante_id: '',
@@ -16,11 +18,31 @@ const App = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
+    // Cargar las notificaciones, usuarios y estudiantes al iniciar
     useEffect(() => {
         fetch('/api/notificaciones')
             .then(response => response.json())
             .then(data => setNotificaciones(data))
             .catch(() => toast.error("Error al cargar notificaciones"));
+
+        // Cargar todos los usuarios y luego filtrarlos por rol_id (Padre = 3)
+        fetch('/api/usuarios')
+            .then(response => response.json())
+            .then(data => {
+                const usuariosPadres = data.filter(usuario => usuario.rol_id === 3); // Filtrar por rol_id
+                console.log("Usuarios con rol de Padre cargados:", usuariosPadres);
+                setUsuarios(usuariosPadres);
+            })
+            .catch(() => toast.error("Error al cargar usuarios"));
+
+        // Cargar estudiantes
+        fetch('/api/estudiantes')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Estudiantes cargados:", data);
+                setEstudiantes(data);
+            })
+            .catch(() => toast.error("Error al cargar estudiantes"));
     }, []);
 
     const handleChange = (e) => {
@@ -35,7 +57,7 @@ const App = () => {
         setLoading(true);
 
         const method = editMode ? 'PUT' : 'POST';
-        const url = editMode ? `/api/notificaciones/${editId}` : '/api/notificaciones';
+        const url = editMode ? `/api/notificaciones/${editId}` : `/api/notificaciones`;
 
         fetch(url, {
             method: method,
@@ -150,12 +172,26 @@ const App = () => {
                         <div>
                             <form onSubmit={handleSubmit}>
                                 <div>
-                                    <label>ID Usuario</label>
-                                    <input type="number" name="usuario_id" value={form.usuario_id} onChange={handleChange} required />
+                                    <label>Usuario (Padre)</label>
+                                    <select name="usuario_id" value={form.usuario_id} onChange={handleChange} required>
+                                        <option value="">Seleccione un usuario (Padre)</option>
+                                        {usuarios.map((usuario, index) => (
+                                            <option key={`usuario-${index}-${usuario.usuario_id}`} value={usuario.usuario_id}>
+                                                {usuario.nombre} {usuario.apellido}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
-                                    <label>ID Estudiante</label>
-                                    <input type="number" name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required />
+                                    <label>Estudiante</label>
+                                    <select name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required>
+                                        <option value="">Seleccione un estudiante</option>
+                                        {estudiantes.map((estudiante, index) => (
+                                            <option key={`estudiante-${index}-${estudiante.estudiante_id}`} value={estudiante.estudiante_id}>
+                                                {estudiante.nombre} {estudiante.apellido}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label>Mensaje</label>
@@ -179,4 +215,14 @@ const App = () => {
     );
 };
 
-ReactDOM.createRoot(document.getElementById('crud-notificaciones')).render(<App />);
+// Montaje manual del componente de notificaciones
+window.onload = () => {
+    const rootElement = document.getElementById('crud-notificaciones');
+    if (rootElement) {
+        ReactDOM.createRoot(rootElement).render(<App />);
+    } else {
+        console.error("No se encontró el contenedor con id 'crud-notificaciones'");
+    }
+};
+
+export default App;
