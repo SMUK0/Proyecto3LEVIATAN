@@ -1,19 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import UsuariosApp from './usuariosapp.jsx';
 import EstudiantesApp from './estudiantesapp.jsx';
 import MateriasApp from './materiasapp.jsx';
-import CursosApp from './cursosapp.jsx';  // Agregamos CursosApp
+import CursosApp from './cursosapp.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser } from '@fortawesome/free-solid-svg-icons'; // Importamos el ícono de usuario
 
 const ViewAdministrador = () => {
-    // Estado para manejar el componente activo
     const [activeComponent, setActiveComponent] = useState('');
-    // Estado para manejar el colapso del menú lateral
     const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+    const [user, setUser] = useState(null);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (userData && userData.rol === 1) {
+            setUser(userData);
+        } else {
+            // Si no está logueado o no tiene rol de administrador, redirige al login
+            window.location.href = '/login';
+        }
+    }, []);
 
     const toggleMenu = () => {
         setIsMenuCollapsed(!isMenuCollapsed);
     };
+
+    const handleLogout = () => {
+        // Elimina el usuario de localStorage y redirige al login
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    };
+
+    const toggleDropdown = () => {
+        setIsDropdownOpen(!isDropdownOpen);
+    };
+
+    // Cierra el menú si se hace clic fuera de él
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const renderComponent = () => {
         if (activeComponent === 'usuarios') {
@@ -31,37 +67,32 @@ const ViewAdministrador = () => {
     return (
         <div style={{ display: 'flex' }}>
             {/* Menú lateral colapsable */}
-            <div style={{
-                width: isMenuCollapsed ? '50px' : '250px', // Cambiar ancho del menú
-                backgroundColor: '#f8f9fa',
-                padding: isMenuCollapsed ? '10px' : '20px',
-                transition: 'width 0.3s ease', // Animación suave
-            }}>
+            <div>
                 {/* Botón para colapsar/expandir el menú */}
-                <button onClick={toggleMenu} style={collapseButtonStyle}>
+                <button onClick={toggleMenu}>
                     {isMenuCollapsed ? '►' : '◄'}
                 </button>
                 {!isMenuCollapsed && (
                     <div>
                         <h2>Menú</h2>
-                        <ul style={{ listStyleType: 'none', padding: 0 }}>
+                        <ul>
                             <li>
-                                <button onClick={() => setActiveComponent('usuarios')} style={buttonStyle}>
+                                <button onClick={() => setActiveComponent('usuarios')}>
                                     Usuarios
                                 </button>
                             </li>
                             <li>
-                                <button onClick={() => setActiveComponent('estudiantes')} style={buttonStyle}>
+                                <button onClick={() => setActiveComponent('estudiantes')}>
                                     Estudiantes
                                 </button>
                             </li>
                             <li>
-                                <button onClick={() => setActiveComponent('materias')} style={buttonStyle}>
+                                <button onClick={() => setActiveComponent('materias')}>
                                     Materias
                                 </button>
                             </li>
                             <li>
-                                <button onClick={() => setActiveComponent('cursos')} style={buttonStyle}>
+                                <button onClick={() => setActiveComponent('cursos')}>
                                     Cursos
                                 </button>
                             </li>
@@ -71,34 +102,25 @@ const ViewAdministrador = () => {
             </div>
 
             {/* Contenido dinámico */}
-            <div style={{ flex: 1, padding: '20px' }}>
+            <div>
                 {renderComponent()}
+            </div>
+
+            {/* Menú desplegable de usuario */}
+            <div ref={dropdownRef}>
+                <FontAwesomeIcon icon={faUser} size="2x" onClick={toggleDropdown} />
+                {isDropdownOpen && (
+                    <div>
+                        <p>Usuario: {user.nombre} {user.apellido}</p>
+                        <p>Rol: {user.rol === 1 ? 'Administrador' : user.rol}</p>
+                        <button onClick={handleLogout}>
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
-};
-
-// Estilo básico para los botones del menú principal
-const buttonStyle = {
-    width: '100%',
-    padding: '10px',
-    margin: '10px 0',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    cursor: 'pointer',
-};
-
-// Estilo del botón de colapso
-const collapseButtonStyle = {
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    cursor: 'pointer',
-    width: '100%',
-    padding: '10px',
-    textAlign: 'center',
-    marginBottom: '10px',
 };
 
 // Montaje manual para pruebas del administrador

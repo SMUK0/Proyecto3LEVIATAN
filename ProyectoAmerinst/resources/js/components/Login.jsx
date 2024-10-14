@@ -8,18 +8,15 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    // Obtener el token CSRF desde el meta tag del HTML
     const getCsrfToken = () => {
         const token = document.querySelector('meta[name="csrf-token"]');
         return token ? token.getAttribute('content') : '';
     };
 
-    // Manejar los cambios en los campos del formulario
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    // Manejar el envío del formulario
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -30,43 +27,27 @@ const Login = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken() // Añadimos el token CSRF
+                    'X-CSRF-TOKEN': getCsrfToken()
                 },
                 body: JSON.stringify(form),
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Error en el inicio de sesión');
+                throw new Error('Credenciales incorrectas');
             }
 
-            const data = await response.json(); // Obtenemos el nombre, apellido y rol del usuario
+            const data = await response.json();
 
-            // Mostrar en la consola la información del usuario logueado
-            console.log(`Nombre: ${data.nombre}`);
-            console.log(`Apellido: ${data.apellido}`);
+            // Mostrar logs del usuario
+            console.log(`Usuario: ${data.nombre} ${data.apellido}`);
+            console.log(`Rol: ${data.rol === 1 ? 'Administrador' : data.rol === 2 ? 'Maestro' : 'Padre'}`);
 
-            // Comprobar el rol del usuario y redirigir si es administrador
-            let rolText;
-            switch (data.rol) {
-                case 1:
-                    rolText = 'Administrador';
-                    console.log(`Rol: ${rolText}`);
-                    // Redirigir a la vista de administrador
-                    window.location.href = '/administrador';
-                    break;
-                case 2:
-                    rolText = 'Maestro';
-                    console.log(`Rol: ${rolText}`);
-                    break;
-                case 3:
-                    rolText = 'Padre';
-                    console.log(`Rol: ${rolText}`);
-                    break;
-                default:
-                    rolText = 'Rol desconocido';
-                    console.log(`Rol: ${rolText}`);
-                    break;
+            // Guardar los datos del usuario en localStorage
+            localStorage.setItem('user', JSON.stringify(data));
+
+            // Redirigir según el rol
+            if (data.rol === 1) {
+                window.location.href = '/administrador';
             }
 
             toast.success('Inicio de sesión exitoso!');
@@ -81,7 +62,7 @@ const Login = () => {
     return (
         <div>
             <h2>Iniciar Sesión</h2>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p>{error}</p>}
             <form onSubmit={handleSubmit}>
                 <div>
                     <label htmlFor="email">Correo electrónico:</label>
@@ -109,7 +90,6 @@ const Login = () => {
                     {loading ? 'Cargando...' : 'Iniciar Sesión'}
                 </button>
             </form>
-
             <ToastContainer />
         </div>
     );
