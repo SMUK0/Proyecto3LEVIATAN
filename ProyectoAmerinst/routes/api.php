@@ -22,6 +22,9 @@ use App\Http\Controllers\MaestroCursosController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+/* LOGIN */
+Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
+
 /* Usuario */
 Route::get('/usuarios', [UsuarioController::class, 'apiIndex']);
 Route::post('/usuarios', [UsuarioController::class, 'store']);

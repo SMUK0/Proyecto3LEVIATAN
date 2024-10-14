@@ -21,6 +21,11 @@ use App\Http\Controllers\EstudiantePadresController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+/* LOGIN */
+Route::get('/login', function () {
+    return view('login');
+});
+
 /* Vista Administrador */
 Route::get('/administrador', function () {
     return view('view_administrador');
