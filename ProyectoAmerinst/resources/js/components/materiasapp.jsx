@@ -51,8 +51,9 @@ const MateriasApp = () => {
                 toast.success("Materia agregada exitosamente");
             }
             setShowModal(false);
-            setForm({ nombre: '' });
-            setEditMode(false);
+            setForm({ nombre: '' });   // Reiniciar formulario
+            setEditMode(false);         // Reiniciar modo de edición
+            setEditId(null);            // Reiniciar ID de edición
         })
         .catch(() => {
             toast.error("Error al crear o actualizar la materia");
@@ -60,13 +61,22 @@ const MateriasApp = () => {
         .finally(() => setLoading(false));
     };
 
+    // Abrir el modal para agregar una nueva materia
+    const handleShowAddForm = () => {
+        setForm({ nombre: '' });        // Reiniciar formulario
+        setEditMode(false);             // Reiniciar modo de edición
+        setEditId(null);                // Reiniciar ID de edición
+        setShowModal(true);             // Mostrar el modal
+    };
+
+    // Abrir el modal para editar una materia existente
     const handleEdit = (materia) => {
         setForm({
             nombre: materia.nombre
         });
         setEditId(materia.materia_id);
         setEditMode(true);
-        setShowModal(true);
+        setShowModal(true);             // Mostrar el modal en modo edición
     };
 
     const handleDelete = (id) => {
@@ -94,10 +104,12 @@ const MateriasApp = () => {
         });
     };
 
+    // Cerrar el modal y reiniciar el formulario
     const handleCloseModal = () => {
         setShowModal(false);
-        setForm({ nombre: '' });
-        setEditMode(false);
+        setForm({ nombre: '' });        // Reiniciar formulario al cerrar
+        setEditMode(false);             // Reiniciar modo de edición
+        setEditId(null);                // Limpiar el ID de edición
     };
 
     return (
@@ -105,13 +117,13 @@ const MateriasApp = () => {
             {loading && <div>Cargando...</div>}
 
             <div>
-                <button onClick={() => setShowModal(true)}>Agregar Materia</button>
+                <button onClick={handleShowAddForm}>Agregar Materia</button>
             </div>
 
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        {/* Eliminar la columna de ID */}
                         <th>Nombre</th>
                         <th>Acciones</th>
                     </tr>
@@ -119,7 +131,6 @@ const MateriasApp = () => {
                 <tbody>
                     {materias.map(materia => (
                         <tr key={materia.materia_id}>
-                            <td>{materia.materia_id}</td>
                             <td>{materia.nombre}</td>
                             <td>
                                 <button onClick={() => handleEdit(materia)}>Editar</button>

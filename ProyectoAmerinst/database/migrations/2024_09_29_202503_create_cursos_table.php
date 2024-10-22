@@ -12,10 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('cursos', function (Blueprint $table) {
+            $table->engine = 'InnoDB';  // Asegúrate de usar InnoDB
             $table->id('curso_id');
             $table->string('nombre', 50);
             $table->string('grado', 50);
         });
+        
+        
     }
 
     /**

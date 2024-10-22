@@ -6,7 +6,6 @@ use App\Models\Estudiante;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-
 class EstudianteController extends Controller
 {
     /**
@@ -14,14 +13,16 @@ class EstudianteController extends Controller
      */
     public function apiIndex()
     {
-        $estudiantes = estudiante::all();
+        // Cargar estudiantes con la relación 'curso' para obtener el nombre del curso
+        $estudiantes = Estudiante::with('curso')->get();
         return response()->json($estudiantes, 200);
     }
 
     // Método para devolver la vista HTML
     public function index()
     {
-        $estudiantes = Estudiante::all();
+        // Cargar estudiantes con la relación 'curso' para la vista
+        $estudiantes = Estudiante::with('curso')->get();
         return view('estudiantes', compact('estudiantes'));
     }
 
@@ -29,12 +30,12 @@ class EstudianteController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validación de los datos
+            // Validación de los datos (reemplazar 'grado' por 'curso_id')
             $validatedData = $request->validate([
                 'nombre' => 'required|max:100',
                 'apellido' => 'required|max:100',
                 'fecha_nacimiento' => 'required|date',
-                'grado' => 'required|max:50',
+                'curso_id' => 'required|exists:cursos,curso_id',  // Asegurar que curso_id exista en la tabla 'cursos'
             ]);
     
             // Intentar crear el estudiante
@@ -61,7 +62,8 @@ class EstudianteController extends Controller
     // Obtener un estudiante por ID
     public function show($id)
     {
-        $estudiante = Estudiante::find($id);
+        // Cargar el estudiante con su curso
+        $estudiante = Estudiante::with('curso')->find($id);
         if (!$estudiante) {
             return response()->json(['message' => 'Estudiante no encontrado'], 404);
         }
@@ -76,11 +78,12 @@ class EstudianteController extends Controller
             return response()->json(['message' => 'Estudiante no encontrado'], 404);
         }
 
+        // Validar el curso_id en lugar de grado
         $validatedData = $request->validate([
             'nombre' => 'sometimes|required|max:100',
             'apellido' => 'sometimes|required|max:100',
             'fecha_nacimiento' => 'sometimes|required|date',
-            'grado' => 'sometimes|required|max:50',
+            'curso_id' => 'sometimes|required|exists:cursos,curso_id',  // Asegurar que curso_id exista
         ]);
 
         $estudiante->update($validatedData);

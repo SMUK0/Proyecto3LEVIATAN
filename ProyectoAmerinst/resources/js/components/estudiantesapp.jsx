@@ -5,11 +5,12 @@ import Swal from 'sweetalert2';
 
 const EstudiantesApp = () => {
     const [estudiantes, setEstudiantes] = useState([]);
+    const [cursos, setCursos] = useState([]); // Cursos para llenar el select de grados
     const [form, setForm] = useState({
         nombre: '',
         apellido: '',
         fecha_nacimiento: '',
-        grado: ''
+        curso_id: ''  // Almacena el curso_id en lugar del nombre del grado
     });
     const [editMode, setEditMode] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -17,11 +18,51 @@ const EstudiantesApp = () => {
     const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
+        // Cargar estudiantes
         fetch('/api/estudiantes')
-            .then(response => response.json())
-            .then(data => setEstudiantes(data))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al cargar estudiantes');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Estudiantes cargados:', data);  // Verifica los datos de estudiantes cargados
+                setEstudiantes(data);
+            })
             .catch(() => toast.error("Error al cargar estudiantes"));
+
+        // Cargar cursos (grados)
+        fetch('/api/cursos')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al cargar cursos');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Cursos cargados:', data);  // Verifica los datos de cursos cargados
+                setCursos(data);
+            })
+            .catch(() => toast.error("Error al cargar cursos"));
     }, []);
+
+    // Calcular la edad desde la fecha de nacimiento
+    const calculateAge = (fecha_nacimiento) => {
+        const birthDate = new Date(fecha_nacimiento);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    const isValidAge = (fecha_nacimiento) => {
+        const age = calculateAge(fecha_nacimiento);
+        return age >= 12 && age <= 20;
+    };
 
     const handleChange = (e) => {
         setForm({
@@ -32,6 +73,12 @@ const EstudiantesApp = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (!isValidAge(form.fecha_nacimiento)) {
+            toast.error("La edad debe estar entre 12 y 20 años.");
+            return;
+        }
+
         setLoading(true);
 
         const method = editMode ? 'PUT' : 'POST';
@@ -53,9 +100,7 @@ const EstudiantesApp = () => {
                 setEstudiantes([...estudiantes, data]);
                 toast.success("Estudiante agregado exitosamente");
             }
-            setShowModal(false);
-            setForm({ nombre: '', apellido: '', fecha_nacimiento: '', grado: '' });
-            setEditMode(false);
+            handleCloseModal(); // Cerrar el modal después de guardar
         })
         .catch(() => toast.error("Error al crear o actualizar el estudiante"))
         .finally(() => setLoading(false));
@@ -66,7 +111,7 @@ const EstudiantesApp = () => {
             nombre: estudiante.nombre,
             apellido: estudiante.apellido,
             fecha_nacimiento: estudiante.fecha_nacimiento,
-            grado: estudiante.grado
+            curso_id: estudiante.curso_id  // Almacenar el curso_id en el formulario
         });
         setEditId(estudiante.estudiante_id);
         setEditMode(true);
@@ -97,6 +142,23 @@ const EstudiantesApp = () => {
 
     const handleCloseModal = () => {
         setShowModal(false);
+        setForm({ nombre: '', apellido: '', fecha_nacimiento: '', curso_id: '' });
+        setEditMode(false);
+        setEditId(null);
+    };
+
+    // Función para obtener el nombre del curso basado en el curso_id
+    const getNombreGrado = (cursoId) => {
+        if (!cursos || cursos.length === 0) {
+            console.warn('La lista de cursos está vacía o no se ha cargado correctamente');
+            return 'Sin asignar';
+        }
+
+        const curso = cursos.find(curso => curso.curso_id === cursoId);
+        if (!curso) {
+            console.warn(`No se encontró un curso con curso_id: ${cursoId}`); // Log para verificar si el curso existe
+        }
+        return curso ? curso.nombre : 'Sin asignar';
     };
 
     return (
@@ -104,28 +166,28 @@ const EstudiantesApp = () => {
             {loading && <div>Cargando...</div>}
 
             <div>
-                <button onClick={() => setShowModal(true)}>Agregar Estudiante</button>
+                <button onClick={() => {
+                    setShowModal(true);
+                    setEditMode(false);
+                    setForm({ nombre: '', apellido: '', fecha_nacimiento: '', curso_id: '' });
+                }}>Agregar Estudiante</button>
             </div>
 
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Fecha Nacimiento</th>
-                        <th>Grado</th>
+                        <th>Nombre Completo</th>
+                        <th>Edad</th>
+                        <th>Curso</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {estudiantes.map(est => (
                         <tr key={est.estudiante_id}>
-                            <td>{est.estudiante_id}</td>
-                            <td>{est.nombre}</td>
-                            <td>{est.apellido}</td>
-                            <td>{est.fecha_nacimiento}</td>
-                            <td>{est.grado}</td>
+                            <td>{`${est.nombre} ${est.apellido}`}</td>
+                            <td>{calculateAge(est.fecha_nacimiento)} años</td>
+                            <td>{getNombreGrado(est.curso_id)}</td>
                             <td>
                                 <button onClick={() => handleEdit(est)}>Editar</button>
                                 <button onClick={() => handleDelete(est.estudiante_id)}>Eliminar</button>
@@ -158,7 +220,14 @@ const EstudiantesApp = () => {
                                 </div>
                                 <div>
                                     <label>Grado</label>
-                                    <input type="text" name="grado" value={form.grado} onChange={handleChange} required />
+                                    <select name="curso_id" value={form.curso_id} onChange={handleChange} required>
+                                        <option value="">Selecciona un grado</option>
+                                        {cursos.map(curso => (
+                                            <option key={curso.curso_id} value={curso.curso_id}>
+                                                {curso.grado}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <button type="submit" disabled={loading}>
                                     {editMode ? 'Actualizar Estudiante' : 'Agregar Estudiante'}

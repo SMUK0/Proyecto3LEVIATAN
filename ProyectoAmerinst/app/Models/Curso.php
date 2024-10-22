@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Curso extends Model
 {
     use HasFactory;
+
     // Nombre de la tabla
     protected $table = 'cursos';
 
@@ -19,4 +20,10 @@ class Curso extends Model
 
     // Campos asignables masivamente
     protected $fillable = ['nombre', 'grado'];
+
+    // Relación con el modelo Estudiante
+    public function estudiantes()
+    {
+        return $this->hasMany(Estudiante::class, 'curso_id');  // Relación hasMany con el modelo Estudiante
+    }
 }

@@ -2,15 +2,16 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RolController;
 use App\Http\Controllers\NotaController;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\EstudianteController;
-use App\Http\Controllers\EstudiantePadresController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\MaestroCursosController;
+use App\Http\Controllers\EstudiantePadresController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,7 @@ use App\Http\Controllers\MaestroCursosController;
 /* LOGIN */
 Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
 
+Route::get('/roles', [RolController::class, 'index']);
 /* Usuario */
 Route::get('/usuarios', [UsuarioController::class, 'apiIndex']);
 Route::post('/usuarios', [UsuarioController::class, 'store']);

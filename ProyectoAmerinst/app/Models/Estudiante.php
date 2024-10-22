@@ -19,5 +19,11 @@ class Estudiante extends Model
     public $timestamps = false;
 
     // Campos que son asignables masivamente
-    protected $fillable = ['nombre', 'apellido', 'fecha_nacimiento', 'grado'];
+    protected $fillable = ['nombre', 'apellido', 'fecha_nacimiento', 'curso_id'];  // Cambiar 'grado' por 'curso_id'
+
+    // Relación con el modelo Curso
+    public function curso()
+    {
+        return $this->belongsTo(Curso::class, 'curso_id');  // Relación belongsTo con el modelo Curso
+    }
 }

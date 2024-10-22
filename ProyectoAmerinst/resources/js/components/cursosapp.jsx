@@ -52,8 +52,8 @@ const CursosApp = () => {
                 toast.success("Curso agregado exitosamente");
             }
             setShowModal(false);
-            setForm({ nombre: '', grado: '' });
-            setEditMode(false);
+            setForm({ nombre: '', grado: '' });  // Reiniciar formulario
+            setEditMode(false);                  // Reiniciar modo de edición
         })
         .catch(() => {
             toast.error("Error al crear o actualizar el curso");
@@ -61,6 +61,14 @@ const CursosApp = () => {
         .finally(() => setLoading(false));
     };
 
+    // Abrir el modal para agregar un curso
+    const handleShowAddForm = () => {
+        setForm({ nombre: '', grado: '' });  // Reiniciar formulario
+        setEditMode(false);                  // Asegurarse de que no está en modo edición
+        setShowModal(true);                  // Mostrar el modal
+    };
+
+    // Abrir el modal para editar un curso
     const handleEdit = (curso) => {
         setForm({
             nombre: curso.nombre,
@@ -68,7 +76,7 @@ const CursosApp = () => {
         });
         setEditId(curso.curso_id);
         setEditMode(true);
-        setShowModal(true);
+        setShowModal(true);                  // Mostrar el modal en modo edición
     };
 
     const handleDelete = (id) => {
@@ -96,24 +104,37 @@ const CursosApp = () => {
         });
     };
 
+    // Cerrar el modal y reiniciar el formulario
     const handleCloseModal = () => {
         setShowModal(false);
-        setForm({ nombre: '', grado: '' });
-        setEditMode(false);
+        setForm({ nombre: '', grado: '' });  // Reiniciar formulario al cerrar
+        setEditMode(false);                  // Reiniciar modo de edición
+        setEditId(null);                     // Limpiar el ID de edición
     };
+
+    // Opciones para los grados
+    const opcionesGrado = [
+        { value: '1er Grado', label: '1er Grado' },
+        { value: '2do Grado', label: '2do Grado' },
+        { value: '3er Grado', label: '3er Grado' },
+        { value: '4to Grado', label: '4to Grado' },
+        { value: '5to Grado', label: '5to Grado' },
+        { value: '6to Grado', label: '6to Grado' },
+        { value: '7mo Grado', label: '7mo Grado' },
+        { value: '8vo Grado', label: '8vo Grado' }
+    ];
 
     return (
         <div>
             {loading && <div>Cargando...</div>}
 
             <div>
-                <button onClick={() => setShowModal(true)}>Agregar Curso</button>
+                <button onClick={handleShowAddForm}>Agregar Curso</button>
             </div>
 
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Nombre</th>
                         <th>Grado</th>
                         <th>Acciones</th>
@@ -122,7 +143,6 @@ const CursosApp = () => {
                 <tbody>
                     {cursos.map(curso => (
                         <tr key={curso.curso_id}>
-                            <td>{curso.curso_id}</td>
                             <td>{curso.nombre}</td>
                             <td>{curso.grado}</td>
                             <td>
@@ -149,7 +169,14 @@ const CursosApp = () => {
                                 </div>
                                 <div>
                                     <label>Grado</label>
-                                    <input type="text" name="grado" value={form.grado} onChange={handleChange} required />
+                                    <select name="grado" value={form.grado} onChange={handleChange} required>
+                                        <option value="">Selecciona un grado</option>
+                                        {opcionesGrado.map((opcion) => (
+                                            <option key={opcion.value} value={opcion.value}>
+                                                {opcion.label}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <button type="submit" disabled={loading}>
                                     {editMode ? 'Actualizar Curso' : 'Agregar Curso'}
