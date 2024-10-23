@@ -5,8 +5,6 @@ import { ToastContainer, toast } from 'react-toastify';
 
 const App = () => {
     const [notificaciones, setNotificaciones] = useState([]);
-    const [usuarios, setUsuarios] = useState([]); // Para almacenar los usuarios con rol de Padre
-    const [estudiantes, setEstudiantes] = useState([]); // Para almacenar los estudiantes
     const [form, setForm] = useState({
         usuario_id: '',
         estudiante_id: '',
@@ -18,75 +16,81 @@ const App = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-    // Cargar las notificaciones, usuarios y estudiantes al iniciar
+    // Cargar todas las notificaciones al iniciar
     useEffect(() => {
+        setLoading(true);
         fetch('/api/notificaciones')
             .then(response => response.json())
-            .then(data => setNotificaciones(data))
-            .catch(() => toast.error("Error al cargar notificaciones"));
-
-        // Cargar todos los usuarios y luego filtrarlos por rol_id (Padre = 3)
-        fetch('/api/usuarios')
-            .then(response => response.json())
             .then(data => {
-                const usuariosPadres = data.filter(usuario => usuario.rol_id === 3); // Filtrar por rol_id
-                console.log("Usuarios con rol de Padre cargados:", usuariosPadres);
-                setUsuarios(usuariosPadres);
+                setNotificaciones(data);
+                console.log("Notificaciones cargadas desde la API:", data);
             })
-            .catch(() => toast.error("Error al cargar usuarios"));
-
-        // Cargar estudiantes
-        fetch('/api/estudiantes')
-            .then(response => response.json())
-            .then(data => {
-                console.log("Estudiantes cargados:", data);
-                setEstudiantes(data);
-            })
-            .catch(() => toast.error("Error al cargar estudiantes"));
+            .catch(() => toast.error("Error al cargar notificaciones"))
+            .finally(() => setLoading(false));
     }, []);
 
-    const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        });
+    const getCsrfToken = () => {
+        const token = document.querySelector('meta[name="csrf-token"]');
+        return token ? token.getAttribute('content') : '';
     };
 
-    const handleSubmit = (e) => {
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setForm((prevForm) => ({
+            ...prevForm,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+        console.log(`Campo actualizado: ${name}, Valor: ${value}`);
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        console.log("Datos del formulario que se enviarán:", form);
 
         const method = editMode ? 'PUT' : 'POST';
-        const url = editMode ? `/api/notificaciones/${editId}` : `/api/notificaciones`;
+        const url = editMode ? `/api/notificaciones/${editId}` : '/api/notificaciones';
 
-        fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(form)
-        })
-        .then(response => response.json())
-        .then(data => {
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                },
+                body: JSON.stringify({
+                    ...form,
+                    usuario_id: parseInt(form.usuario_id, 10),
+                    estudiante_id: parseInt(form.estudiante_id, 10),
+                }),
+            });
+
+            const responseData = await response.json();
+            if (!response.ok) {
+                console.error('Error en la respuesta del servidor:', responseData);
+                throw new Error(responseData.message || 'Error en la solicitud al servidor');
+            }
+
             if (editMode) {
-                setNotificaciones(notificaciones.map(notif => notif.notificacion_id === editId ? data : notif));
+                setNotificaciones(notificaciones.map(notif => notif.notificacion_id === editId ? responseData : notif));
                 toast.success("Notificación actualizada exitosamente");
             } else {
-                setNotificaciones([...notificaciones, data]);
+                setNotificaciones([...notificaciones, responseData]);
                 toast.success("Notificación agregada exitosamente");
             }
-            setShowModal(false);
-            setForm({ usuario_id: '', estudiante_id: '', mensaje: '', leido: false });
-            setEditMode(false);
-        })
-        .catch(() => toast.error("Error al crear o actualizar la notificación"))
-        .finally(() => setLoading(false));
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error al crear o actualizar la notificación:', error);
+            toast.error(`Error al crear o actualizar la notificación: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleEdit = (notificacion) => {
         setForm({
-            usuario_id: notificacion.usuario_id,
-            estudiante_id: notificacion.estudiante_id,
+            usuario_id: String(notificacion.usuario_id),
+            estudiante_id: String(notificacion.estudiante_id),
             mensaje: notificacion.mensaje,
             leido: notificacion.leido
         });
@@ -106,14 +110,14 @@ const App = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 setLoading(true);
-                fetch(`/api/notificaciones/${id}`, { method: 'DELETE' })
-                .then(() => {
-                    setNotificaciones(notificaciones.filter(notif => notif.notificacion_id !== id));
-                    toast.success("Notificación eliminada exitosamente");
-                    Swal.fire('Eliminado!', 'La notificación ha sido eliminada.', 'success');
-                })
-                .catch(() => toast.error("Error al eliminar la notificación"))
-                .finally(() => setLoading(false));
+                fetch(`/api/notificaciones/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': getCsrfToken() } })
+                    .then(() => {
+                        setNotificaciones(notificaciones.filter(notif => notif.notificacion_id !== id));
+                        toast.success("Notificación eliminada exitosamente");
+                        Swal.fire('Eliminado!', 'La notificación ha sido eliminada.', 'success');
+                    })
+                    .catch(() => toast.error("Error al eliminar la notificación"))
+                    .finally(() => setLoading(false));
             }
         });
     };
@@ -122,6 +126,7 @@ const App = () => {
         setShowModal(false);
         setForm({ usuario_id: '', estudiante_id: '', mensaje: '', leido: false });
         setEditMode(false);
+        setEditId(null);
     };
 
     return (
@@ -138,21 +143,23 @@ const App = () => {
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Usuario</th>
-                        <th>Estudiante</th>
+                        <th>Usuario ID</th>
+                        <th>Estudiante ID</th>
                         <th>Mensaje</th>
                         <th>Leído</th>
+                        <th>Fecha</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {notificaciones.map(notif => (
-                        <tr key={notif.notificacion_id}>
+                        <tr key={`notif-${notif.notificacion_id}`}>
                             <td>{notif.notificacion_id}</td>
                             <td>{notif.usuario_id}</td>
                             <td>{notif.estudiante_id}</td>
                             <td>{notif.mensaje}</td>
                             <td>{notif.leido ? 'Sí' : 'No'}</td>
+                            <td>{notif.fecha}</td>
                             <td>
                                 <button onClick={() => handleEdit(notif)}>Editar</button>
                                 <button onClick={() => handleDelete(notif.notificacion_id)}>Eliminar</button>
@@ -172,33 +179,31 @@ const App = () => {
                         <div>
                             <form onSubmit={handleSubmit}>
                                 <div>
-                                    <label>Usuario (Padre)</label>
-                                    <select name="usuario_id" value={form.usuario_id} onChange={handleChange} required>
-                                        <option value="">Seleccione un usuario (Padre)</option>
-                                        {usuarios.map((usuario, index) => (
-                                            <option key={`usuario-${index}-${usuario.usuario_id}`} value={usuario.usuario_id}>
-                                                {usuario.nombre} {usuario.apellido}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <label>Usuario ID</label>
+                                    <input
+                                        type="number"
+                                        name="usuario_id"
+                                        value={form.usuario_id}
+                                        onChange={handleChange}
+                                        required
+                                    />
                                 </div>
                                 <div>
-                                    <label>Estudiante</label>
-                                    <select name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required>
-                                        <option value="">Seleccione un estudiante</option>
-                                        {estudiantes.map((estudiante, index) => (
-                                            <option key={`estudiante-${index}-${estudiante.estudiante_id}`} value={estudiante.estudiante_id}>
-                                                {estudiante.nombre} {estudiante.apellido}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <label>Estudiante ID</label>
+                                    <input
+                                        type="number"
+                                        name="estudiante_id"
+                                        value={form.estudiante_id}
+                                        onChange={handleChange}
+                                        required
+                                    />
                                 </div>
                                 <div>
                                     <label>Mensaje</label>
                                     <textarea name="mensaje" value={form.mensaje} onChange={handleChange} required></textarea>
                                 </div>
                                 <div>
-                                    <input type="checkbox" name="leido" checked={form.leido} onChange={(e) => setForm({ ...form, leido: e.target.checked })} />
+                                    <input type="checkbox" name="leido" checked={form.leido} onChange={handleChange} />
                                     <label>Leído</label>
                                 </div>
                                 <button type="submit" disabled={loading}>
@@ -215,7 +220,7 @@ const App = () => {
     );
 };
 
-// Montaje manual del componente de notificaciones
+// Montaje manual del componente
 window.onload = () => {
     const rootElement = document.getElementById('crud-notificaciones');
     if (rootElement) {

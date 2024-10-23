@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -23,11 +22,13 @@ class AuthController extends Controller
             return response()->json(['error' => 'Credenciales incorrectas'], 401);
         }
 
-        // Devolver la respuesta en formato JSON con el nombre, apellido y rol del usuario
+        // Devolver la respuesta en formato JSON con el nombre, apellido, rol y user_id del usuario
         return response()->json([
+            'user_id' => $user->user_id,  // Asegúrate de que la columna `user_id` exista en la tabla `usuarios`
             'rol' => $user->rol_id,
             'nombre' => $user->nombre,
             'apellido' => $user->apellido
         ]);
     }
 }
+

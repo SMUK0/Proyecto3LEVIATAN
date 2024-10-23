@@ -10,8 +10,8 @@ const AsistenciasApp = () => {
     const [form, setForm] = useState({
         estudiante_id: '',
         curso_id: '',
-        fecha: new Date().toISOString().split('T')[0], // Fecha actual en formato YYYY-MM-DD
-        estado: '',
+        fecha: new Date().toISOString().split('T')[0],
+        estado: 'Presente',
         observaciones: ''
     });
     const [editMode, setEditMode] = useState(false);
@@ -19,96 +19,96 @@ const AsistenciasApp = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-    // Obtener el token CSRF desde el meta tag del HTML
     const getCsrfToken = () => {
         const token = document.querySelector('meta[name="csrf-token"]');
         return token ? token.getAttribute('content') : '';
     };
 
-    // Cargar asistencias, estudiantes y cursos al iniciar
     useEffect(() => {
         fetch('/api/asistencias')
             .then(response => response.json())
             .then(data => setAsistencias(data))
-            .catch((error) => {
-                console.log("Error al cargar asistencias:", error);
-                toast.error("Error al cargar asistencias");
-            });
+            .catch(() => toast.error("Error al cargar asistencias"));
 
-        fetch('/api/estudiantes')  // API para obtener los estudiantes
+        fetch('/api/estudiantes')
             .then(response => response.json())
             .then(data => setEstudiantes(data))
-            .catch((error) => {
-                console.log("Error al cargar estudiantes:", error);
-                toast.error("Error al cargar estudiantes");
-            });
+            .catch(() => toast.error("Error al cargar estudiantes"));
 
-        fetch('/api/cursos')  // API para obtener los cursos
+        fetch('/api/cursos')
             .then(response => response.json())
             .then(data => setCursos(data))
-            .catch((error) => {
-                console.log("Error al cargar cursos:", error);
-                toast.error("Error al cargar cursos");
-            });
+            .catch(() => toast.error("Error al cargar cursos"));
     }, []);
 
     const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+
+        if (name === "estudiante_id") {
+            const estudianteSeleccionado = estudiantes.find(est => est.estudiante_id === parseInt(value));
+            if (estudianteSeleccionado) {
+                setForm({
+                    ...form,
+                    [name]: value,
+                    curso_id: estudianteSeleccionado.curso_id
+                });
+            } else {
+                setForm({ ...form, [name]: value, curso_id: '' });
+            }
+        } else {
+            setForm({ ...form, [name]: value });
+        }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setLoading(true);
-    
+
         const method = editMode ? 'PUT' : 'POST';
-        const url = editMode ? `/api/asistencias/${editId}` : `/api/asistencias`;
-    
+        const url = editMode ? `/api/asistencias/${editId}` : '/api/asistencias';
+
         fetch(url, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken() // Incluye el token CSRF en la solicitud
+                'X-CSRF-TOKEN': getCsrfToken()
             },
             body: JSON.stringify(form)
         })
-        .then(response => {
-            console.log("Respuesta del servidor completa:", response);
-            if (!response.ok) {
-                return response.text().then(text => {
-                    // Verifica si la respuesta es HTML (normalmente en casos de redireccionamiento)
+            .then(async (response) => {
+                console.log("Respuesta del servidor completa:", response);
+
+                if (!response.ok) {
+                    const text = await response.text();
                     if (text.startsWith('<!DOCTYPE html>')) {
-                        console.error("Se recibió HTML en lugar de JSON. Posible redireccionamiento o error del servidor.");
+                        console.error("Se recibió HTML en lugar de JSON.");
                         throw new Error("Error inesperado: El servidor devolvió HTML en lugar de JSON.");
                     }
                     console.error("Respuesta no válida, cuerpo del servidor:", text);
                     throw new Error(text);
-                });
-            }
-            return response.json(); // Si no es redireccionado, intenta parsear el JSON
-        })
-        .then(data => {
-            if (editMode) {
-                setAsistencias(asistencias.map(asistencia => asistencia.asistencia_id === editId ? data : asistencia));
-                toast.success("Asistencia actualizada exitosamente");
-            } else {
-                setAsistencias([...asistencias, data]);
-                toast.success("Asistencia agregada exitosamente");
-            }
-            setShowModal(false);
-            setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: '', observaciones: '' });
-            setEditMode(false);
-        })
-        .catch((error) => {
-            console.log("Error al crear o actualizar la asistencia:", error);
-            toast.error("Error al crear o actualizar la asistencia: " + error.message);
-        })
-        .finally(() => setLoading(false));
+                }
+
+                return response.json();
+            })
+            .then(data => {
+                if (editMode) {
+                    setAsistencias(asistencias.map(asistencia => asistencia.asistencia_id === editId ? data : asistencia));
+                    toast.success("Asistencia actualizada exitosamente");
+                } else {
+                    setAsistencias([...asistencias, data]);
+                    toast.success("Asistencia agregada exitosamente");
+                }
+                setShowModal(false);
+                setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: 'Presente', observaciones: '' });
+                setEditMode(false);
+            })
+            .catch((error) => {
+                console.error("Error al crear o actualizar la asistencia:", error);
+                toast.error("Error al crear o actualizar la asistencia: " + error.message);
+            })
+            .finally(() => setLoading(false));
     };
-    
-    
+
 
     const handleEdit = (asistencia) => {
         setForm({
@@ -135,24 +135,31 @@ const AsistenciasApp = () => {
             if (result.isConfirmed) {
                 setLoading(true);
                 fetch(`/api/asistencias/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': getCsrfToken() } })
-                .then(() => {
-                    setAsistencias(asistencias.filter(asistencia => asistencia.asistencia_id !== id));
-                    toast.success("Asistencia eliminada exitosamente");
-                    Swal.fire('Eliminado!', 'La asistencia ha sido eliminada.', 'success');
-                })
-                .catch((error) => {
-                    console.log("Error al eliminar la asistencia:", error);
-                    toast.error("Error al eliminar la asistencia");
-                })
-                .finally(() => setLoading(false));
+                    .then(() => {
+                        setAsistencias(asistencias.filter(asistencia => asistencia.asistencia_id !== id));
+                        toast.success("Asistencia eliminada exitosamente");
+                        Swal.fire('Eliminado!', 'La asistencia ha sido eliminada.', 'success');
+                    })
+                    .catch(() => toast.error("Ocurrió un problema al eliminar la asistencia."))
+                    .finally(() => setLoading(false));
             }
         });
     };
 
     const handleCloseModal = () => {
         setShowModal(false);
-        setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: '', observaciones: '' });
+        setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: 'Presente', observaciones: '' });
         setEditMode(false);
+    };
+
+    const getEstudianteNombre = (id) => {
+        const estudiante = estudiantes.find(e => e.estudiante_id === id);
+        return estudiante ? `${estudiante.nombre} ${estudiante.apellido}` : 'Desconocido';
+    };
+
+    const getCursoNombre = (id) => {
+        const curso = cursos.find(c => c.curso_id === id);
+        return curso ? curso.nombre : 'Sin asignar';
     };
 
     return (
@@ -160,7 +167,11 @@ const AsistenciasApp = () => {
             {loading && <div>Cargando...</div>}
 
             <div>
-                <button onClick={() => setShowModal(true)}>Agregar Asistencia</button>
+                <button onClick={() => {
+                    setShowModal(true);
+                    setEditMode(false);
+                    setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: 'Presente', observaciones: '' });
+                }}>Agregar Asistencia</button>
             </div>
 
             <table>
@@ -178,8 +189,8 @@ const AsistenciasApp = () => {
                     {asistencias.map(asistencia => (
                         <tr key={asistencia.asistencia_id}>
                             <td>{asistencia.asistencia_id}</td>
-                            <td>{asistencia.estudiante_id}</td>
-                            <td>{asistencia.curso_id}</td>
+                            <td>{getEstudianteNombre(asistencia.estudiante_id)}</td>
+                            <td>{getCursoNombre(asistencia.curso_id)}</td>
                             <td>{asistencia.fecha}</td>
                             <td>{asistencia.estado}</td>
                             <td>
@@ -213,14 +224,12 @@ const AsistenciasApp = () => {
                                 </div>
                                 <div>
                                     <label>Curso</label>
-                                    <select name="curso_id" value={form.curso_id} onChange={handleChange} required>
-                                        <option value="">Seleccione un curso</option>
-                                        {cursos.map(curso => (
-                                            <option key={curso.curso_id} value={curso.curso_id}>
-                                                {curso.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <input
+                                        type="text"
+                                        name="curso"
+                                        value={getCursoNombre(form.curso_id)}
+                                        readOnly
+                                    />
                                 </div>
                                 <div>
                                     <label>Fecha</label>

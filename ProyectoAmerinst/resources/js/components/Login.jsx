@@ -48,6 +48,10 @@ const Login = () => {
             // Redirigir según el rol
             if (data.rol === 1) {
                 window.location.href = '/administrador';
+            } else if (data.rol === 2) {
+                window.location.href = '/maestro'; // Redirección para el rol de maestro
+            } else if (data.rol === 3) {
+                window.location.href = '/padre';
             }
 
             toast.success('Inicio de sesión exitoso!');

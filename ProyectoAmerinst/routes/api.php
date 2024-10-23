@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RolController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotaController;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\MateriaController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\EstudiantePadresController;
 */
 /* LOGIN */
 Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
+Route::middleware('auth')->get('/login', [AuthController::class, 'getUser']);
 
 Route::get('/roles', [RolController::class, 'index']);
 /* Usuario */

@@ -35,12 +35,23 @@ return [
     |
     */
 
-    'guards' => [
+    /* 'guards' => [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
+    ], */
+    'guards' => [
+    'web' => [
+        'driver' => 'session',
+        'provider' => 'usuarios',
     ],
+    'api' => [
+        'driver' => 'token',
+        'provider' => 'usuarios',
+        'hash' => false,
+    ],
+],
 
     /*
     |--------------------------------------------------------------------------
@@ -59,7 +70,7 @@ return [
     |
     */
 
-    'providers' => [
+    /* 'providers' => [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
@@ -69,6 +80,13 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+    ], */
+
+    'providers' => [
+        'usuarios' => [
+            'driver' => 'database',
+            'table' => 'usuarios',
+        ],
     ],
 
     /*

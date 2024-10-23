@@ -8,14 +8,14 @@ const NotasApp = () => {
     const [estudiantes, setEstudiantes] = useState([]);
     const [cursos, setCursos] = useState([]);
     const [materias, setMaterias] = useState([]);
-    const [maestro, setMaestro] = useState(null); // Aquí almacenamos la info del maestro logueado
+    const [maestro, setMaestro] = useState(null);
     const [form, setForm] = useState({
         estudiante_id: '',
         curso_id: '',
         materia_id: '',
         maestro_id: '',
         nota: '',
-        fecha: new Date().toISOString().split('T')[0], // Fecha actual en formato YYYY-MM-DD
+        fecha: new Date().toISOString().split('T')[0],
         observaciones: ''
     });
     const [editMode, setEditMode] = useState(false);
@@ -23,77 +23,83 @@ const NotasApp = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-    // Obtener datos del usuario logueado y cargar los datos de la base de datos
     useEffect(() => {
         const userData = JSON.parse(localStorage.getItem('user'));
         if (userData && userData.rol === 2) {
-            console.log('Datos del usuario logueado:', userData);
-            setMaestro(userData); // Guardamos los datos del maestro logueado
+            setMaestro(userData);
             setForm(prevForm => ({
                 ...prevForm,
-                maestro_id: userData.maestro_id // Asumimos que maestro_id está en los datos del usuario
+                maestro_id: userData.user_id
             }));
         } else {
-            console.log('Usuario no autorizado, redirigiendo al login');
-            window.location.href = '/login'; // Redirigir si no es maestro
+            window.location.href = '/login';
         }
 
         fetch('/api/notas')
             .then(response => response.json())
-            .then(data => {
-                console.log('Datos de notas:', data);
-                setNotas(data);
-            })
-            .catch((error) => {
-                console.log('Error al cargar notas:', error);
-                toast.error('Error al cargar notas');
-            });
+            .then(data => setNotas(data))
+            .catch(() => toast.error('Error al cargar notas'));
 
         fetch('/api/estudiantes')
             .then(response => response.json())
-            .then(data => {
-                console.log('Datos de estudiantes:', data);
-                setEstudiantes(data);
-            })
-            .catch((error) => {
-                console.log('Error al cargar estudiantes:', error);
-                toast.error('Error al cargar estudiantes');
-            });
+            .then(data => setEstudiantes(data))
+            .catch(() => toast.error('Error al cargar estudiantes'));
 
         fetch('/api/cursos')
             .then(response => response.json())
-            .then(data => {
-                console.log('Datos de cursos:', data);
-                setCursos(data);
-            })
-            .catch((error) => {
-                console.log('Error al cargar cursos:', error);
-                toast.error('Error al cargar cursos');
-            });
+            .then(data => setCursos(data))
+            .catch(() => toast.error('Error al cargar cursos'));
 
         fetch('/api/materias')
             .then(response => response.json())
-            .then(data => {
-                console.log('Datos de materias:', data);
-                setMaterias(data);
-            })
-            .catch((error) => {
-                console.log('Error al cargar materias:', error);
-                toast.error('Error al cargar materias');
-            });
+            .then(data => setMaterias(data))
+            .catch(() => toast.error('Error al cargar materias'));
     }, []);
 
+    const getEstudianteNombre = (id) => {
+        const estudiante = estudiantes.find(e => e.estudiante_id === id);
+        return estudiante ? `${estudiante.nombre} ${estudiante.apellido}` : 'Desconocido';
+    };
+
+    const getCursoNombre = (id) => {
+        const curso = cursos.find(c => c.curso_id === id);
+        return curso ? curso.nombre : 'Sin asignar';
+    };
+
+    const getMateriaNombre = (id) => {
+        const materia = materias.find(m => m.materia_id === id);
+        return materia ? materia.nombre : 'Desconocida';
+    };
+
     const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
+        const { name, value } = e.target;
+        setForm(prevForm => {
+            let updatedValue = value;
+
+            if (name === 'nota') {
+                updatedValue = value === '' ? '' : Math.min(Math.max(parseFloat(value), 0), 10);
+            }
+
+            if (name === 'estudiante_id') {
+                const selectedEstudiante = estudiantes.find(est => est.estudiante_id === parseInt(value));
+                if (selectedEstudiante) {
+                    return { ...prevForm, estudiante_id: value, curso_id: selectedEstudiante.curso_id };
+                }
+            }
+
+            return { ...prevForm, [name]: updatedValue };
         });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setLoading(true);
-        console.log('Enviando datos del formulario:', form);
+
+        if (!form.maestro_id) {
+            toast.error('El campo Maestro es obligatorio');
+            setLoading(false);
+            return;
+        }
 
         const method = editMode ? 'PUT' : 'POST';
         const url = editMode ? `/api/notas/${editId}` : '/api/notas';
@@ -101,44 +107,66 @@ const NotasApp = () => {
         fetch(url, {
             method: method,
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(form)
         })
-        .then(response => {
-            console.log('Respuesta del servidor:', response);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Respuesta procesada del servidor:', data);
-            if (editMode) {
-                setNotas(notas.map(nota => nota.nota_id === editId ? data : nota));
-                toast.success('Nota actualizada exitosamente');
-            } else {
-                setNotas([...notas, data]);
-                toast.success('Nota agregada exitosamente');
-            }
-            setShowModal(false);
-            setForm({ estudiante_id: '', curso_id: '', materia_id: '', maestro_id: '', nota: '', fecha: new Date().toISOString().split('T')[0], observaciones: '' });
-            setEditMode(false);
-        })
-        .catch((error) => {
-            console.log('Error al crear o actualizar la nota:', error);
-            toast.error('Error al crear o actualizar la nota');
-        })
-        .finally(() => {
-            setLoading(false);
+            .then(async (response) => {
+                if (!response.ok) {
+                    const text = await response.text();
+                    if (text.startsWith('<!DOCTYPE html>')) {
+                        throw new Error('El servidor devolvió HTML. Posible redireccionamiento.');
+                    }
+                    throw new Error(text);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (editMode) {
+                    setNotas(notas.map(nota => nota.nota_id === editId ? data : nota));
+                    toast.success('Nota actualizada exitosamente');
+                } else {
+                    setNotas([...notas, data]);
+                    toast.success('Nota agregada exitosamente');
+                }
+                setShowModal(false);
+                resetForm();
+            })
+            .catch(error => {
+                console.error('Error al crear o actualizar la nota:', error);
+                let errorMessage = "Error al crear o actualizar la nota";
+                try {
+                    const errorData = JSON.parse(error.message);
+                    if (errorData.errors) {
+                        errorMessage += ": " + Object.values(errorData.errors).flat().join(", ");
+                    }
+                } catch { }
+                toast.error(errorMessage);
+            })
+            .finally(() => setLoading(false));
+    };
+
+    const resetForm = () => {
+        setForm({
+            estudiante_id: '',
+            curso_id: '',
+            materia_id: '',
+            maestro_id: maestro?.user_id || '',
+            nota: '',
+            fecha: new Date().toISOString().split('T')[0],
+            observaciones: ''
         });
+        setEditMode(false);
+        setEditId(null);
     };
 
     const handleEdit = (nota) => {
-        console.log('Editando nota:', nota);
         setForm({
             estudiante_id: nota.estudiante_id,
             curso_id: nota.curso_id,
             materia_id: nota.materia_id,
             maestro_id: nota.maestro_id,
-            nota: nota.nota,
+            nota: String(nota.nota),
             fecha: nota.fecha,
             observaciones: nota.observaciones || ''
         });
@@ -148,7 +176,6 @@ const NotasApp = () => {
     };
 
     const handleDelete = (id) => {
-        console.log('Eliminando nota con ID:', id);
         Swal.fire({
             title: '¿Estás seguro?',
             text: "No podrás revertir esto!",
@@ -160,24 +187,19 @@ const NotasApp = () => {
             if (result.isConfirmed) {
                 setLoading(true);
                 fetch(`/api/notas/${id}`, { method: 'DELETE' })
-                .then(() => {
-                    setNotas(notas.filter(nota => nota.nota_id !== id));
-                    toast.success('Nota eliminada exitosamente');
-                    Swal.fire('Eliminado!', 'La nota ha sido eliminada.', 'success');
-                })
-                .catch((error) => {
-                    console.log('Error al eliminar la nota:', error);
-                    toast.error('Error al eliminar la nota');
-                })
-                .finally(() => setLoading(false));
+                    .then(() => {
+                        setNotas(notas.filter(nota => nota.nota_id !== id));
+                        toast.success('Nota eliminada exitosamente');
+                    })
+                    .catch(() => toast.error('Error al eliminar la nota'))
+                    .finally(() => setLoading(false));
             }
         });
     };
 
     const handleCloseModal = () => {
         setShowModal(false);
-        setForm({ estudiante_id: '', curso_id: '', materia_id: '', maestro_id: '', nota: '', fecha: new Date().toISOString().split('T')[0], observaciones: '' });
-        setEditMode(false);
+        resetForm();
     };
 
     return (
@@ -187,7 +209,14 @@ const NotasApp = () => {
             {loading && <div>Cargando...</div>}
 
             <div>
-                <button onClick={() => setShowModal(true)}>Agregar Nota</button>
+                <button onClick={() => {
+                    setEditMode(false);
+                    setEditId(null);
+                    setShowModal(true);
+                    resetForm();
+                }}>
+                    Agregar Nota
+                </button>
             </div>
 
             <table>
@@ -204,15 +233,15 @@ const NotasApp = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {notas.map(nota => (
-                        <tr key={nota.nota_id}>
+                    {notas.map((nota) => (
+                        <tr key={`nota-${nota.nota_id}`}>
                             <td>{nota.nota_id}</td>
-                            <td>{nota.estudiante_id}</td>
-                            <td>{nota.curso_id}</td>
-                            <td>{nota.materia_id}</td>
+                            <td>{getEstudianteNombre(nota.estudiante_id)}</td>
+                            <td>{getCursoNombre(nota.curso_id)}</td>
+                            <td>{getMateriaNombre(nota.materia_id)}</td>
                             <td>{nota.maestro_id}</td>
-                            <td>{nota.nota}</td>
-                            <td>{nota.fecha}</td>
+                            <td>{String(nota.nota)}</td>
+                            <td>{String(nota.fecha)}</td>
                             <td>
                                 <button onClick={() => handleEdit(nota)}>Editar</button>
                                 <button onClick={() => handleDelete(nota.nota_id)}>Eliminar</button>
@@ -244,14 +273,7 @@ const NotasApp = () => {
                                 </div>
                                 <div>
                                     <label>Curso</label>
-                                    <select name="curso_id" value={form.curso_id} onChange={handleChange} required>
-                                        <option value="">Seleccione un curso</option>
-                                        {cursos.map(curso => (
-                                            <option key={curso.curso_id} value={curso.curso_id}>
-                                                {curso.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <input type="text" name="curso_id" value={getCursoNombre(form.curso_id)} readOnly />
                                 </div>
                                 <div>
                                     <label>Materia</label>
@@ -265,12 +287,19 @@ const NotasApp = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label>Maestro</label>
-                                    <input type="text" name="maestro" value={`${maestro?.nombre} ${maestro?.apellido}`} readOnly />
+                                    <label>Maestro ID</label>
+                                    <input type="text" name="maestro_id" value={form.maestro_id} readOnly />
                                 </div>
                                 <div>
                                     <label>Nota</label>
-                                    <input type="number" step="0.01" name="nota" value={form.nota} onChange={handleChange} required />
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        name="nota"
+                                        value={form.nota || ''}
+                                        onChange={handleChange}
+                                        required
+                                    />
                                 </div>
                                 <div>
                                     <label>Fecha</label>
