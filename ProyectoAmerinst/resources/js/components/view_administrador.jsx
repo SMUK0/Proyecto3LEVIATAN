@@ -6,6 +6,105 @@ import MateriasApp from './materiasapp.jsx';
 import CursosApp from './cursosapp.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser } from '@fortawesome/free-solid-svg-icons'; // Importamos el ícono de usuario
+import styled from 'styled-components';
+
+// Estilos para el contenedor principal
+const Container = styled.div`
+    display: flex;
+    min-height: 100vh;
+    background-color: #f4f4f9;
+`;
+
+// Estilos para el menú lateral
+const Sidebar = styled.div`
+    width: ${({ isCollapsed }) => (isCollapsed ? '50px' : '250px')};
+    background-color: #870e20;
+    color: white;
+    padding: ${({ isCollapsed }) => (isCollapsed ? '10px' : '20px')};
+    transition: width 0.3s ease;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+`;
+
+// Estilos para los botones del menú
+const MenuButton = styled.button`
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+    margin-bottom: 10px;
+    border-radius: 5px;
+
+    &:hover {
+        background-color: #a22835;
+    }
+`;
+
+// Estilos para el título del menú
+const MenuTitle = styled.h2`
+    color: white;
+    margin-bottom: 20px;
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+`;
+
+// Estilos para el área principal
+const MainArea = styled.div`
+    flex: 1;
+    padding: 20px;
+    background-color: #f4f4f9;
+`;
+
+// Estilos para el contenedor de usuario
+const UserDropdown = styled.div`
+    position: relative;
+    margin-left: auto;
+    padding: 10px;
+`;
+
+// Estilos para el menú desplegable
+const DropdownMenu = styled.div`
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px;
+`;
+
+// Estilos para el botón de cerrar sesión
+const LogoutButton = styled.button`
+    background-color: #870e20;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    margin-top: 10px;
+
+    &:hover {
+        background-color: #a22835;
+    }
+`;
+
+// Estilos para el icono de usuario
+const UserIcon = styled(FontAwesomeIcon)`
+    color: #870e20;
+    cursor: pointer;
+
+    &:hover {
+        color: #a22835;
+    }
+`;
 
 const ViewAdministrador = () => {
     const [activeComponent, setActiveComponent] = useState('');
@@ -65,61 +164,61 @@ const ViewAdministrador = () => {
     };
 
     return (
-        <div style={{ display: 'flex' }}>
+        <Container>
             {/* Menú lateral colapsable */}
-            <div>
+            <Sidebar isCollapsed={isMenuCollapsed}>
                 {/* Botón para colapsar/expandir el menú */}
-                <button onClick={toggleMenu}>
+                <MenuButton onClick={toggleMenu}>
                     {isMenuCollapsed ? '►' : '◄'}
-                </button>
+                </MenuButton>
                 {!isMenuCollapsed && (
                     <div>
-                        <h2>Menú</h2>
-                        <ul>
+                        <MenuTitle>Menú</MenuTitle>
+                        <ul style={{ listStyleType: 'none', padding: 0 }}>
                             <li>
-                                <button onClick={() => setActiveComponent('usuarios')}>
+                                <MenuButton onClick={() => setActiveComponent('usuarios')}>
                                     Usuarios
-                                </button>
+                                </MenuButton>
                             </li>
                             <li>
-                                <button onClick={() => setActiveComponent('estudiantes')}>
+                                <MenuButton onClick={() => setActiveComponent('estudiantes')}>
                                     Estudiantes
-                                </button>
+                                </MenuButton>
                             </li>
                             <li>
-                                <button onClick={() => setActiveComponent('materias')}>
+                                <MenuButton onClick={() => setActiveComponent('materias')}>
                                     Materias
-                                </button>
+                                </MenuButton>
                             </li>
                             <li>
-                                <button onClick={() => setActiveComponent('cursos')}>
+                                <MenuButton onClick={() => setActiveComponent('cursos')}>
                                     Cursos
-                                </button>
+                                </MenuButton>
                             </li>
                         </ul>
                     </div>
                 )}
-            </div>
+            </Sidebar>
 
             {/* Contenido dinámico */}
-            <div>
+            <MainArea>
                 {renderComponent()}
-            </div>
+            </MainArea>
 
             {/* Menú desplegable de usuario */}
-            <div ref={dropdownRef}>
-                <FontAwesomeIcon icon={faUser} size="2x" onClick={toggleDropdown} />
+            <UserDropdown ref={dropdownRef}>
+                <UserIcon icon={faUser} size="2x" onClick={toggleDropdown} />
                 {isDropdownOpen && (
-                    <div>
-                        <p>Usuario: {user.nombre} {user.apellido}</p>
-                        <p>Rol: {user.rol === 1 ? 'Administrador' : user.rol}</p>
-                        <button onClick={handleLogout}>
+                    <DropdownMenu>
+                        <p>Usuario: {user?.nombre} {user?.apellido}</p>
+                        <p>Rol: {user?.rol === 1 ? 'Administrador' : user?.rol}</p>
+                        <LogoutButton onClick={handleLogout}>
                             Cerrar Sesión
-                        </button>
-                    </div>
+                        </LogoutButton>
+                    </DropdownMenu>
                 )}
-            </div>
-        </div>
+            </UserDropdown>
+        </Container>
     );
 };
 

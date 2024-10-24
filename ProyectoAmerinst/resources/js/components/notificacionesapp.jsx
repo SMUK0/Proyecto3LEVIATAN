@@ -2,6 +2,113 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import styled from 'styled-components';
+
+// Estilos para el contenedor principal
+const Container = styled.div`
+    padding: 20px;
+    background-color: #f4f4f9;
+    min-height: 100vh;
+`;
+
+// Estilos para la tabla
+const Table = styled.table`
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #870e20;
+        color: white;
+    }
+`;
+
+// Estilos para los botones de acción
+const ActionButton = styled.button`
+    background-color: ${({ actionType }) => actionType === 'edit' ? '#007bff' : '#dc3545'};
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ actionType }) => actionType === 'edit' ? '#0056b3' : '#c82333'};
+    }
+`;
+
+// Estilos para el modal
+const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+const ModalContent = styled.div`
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 500px;
+    max-width: 90%;
+`;
+
+// Estilos para el formulario dentro del modal
+const Form = styled.form`
+    display: flex;
+    flex-direction: column;
+`;
+
+const Label = styled.label`
+    margin-top: 10px;
+    font-weight: bold;
+`;
+
+const Input = styled.input`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const TextArea = styled.textarea`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const SubmitButton = styled.button`
+    background-color: #870e20;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #a22835;
+    }
+
+    &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+`;
 
 const App = () => {
     const [notificaciones, setNotificaciones] = useState([]);
@@ -16,14 +123,12 @@ const App = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-    // Cargar todas las notificaciones al iniciar
     useEffect(() => {
         setLoading(true);
         fetch('/api/notificaciones')
             .then(response => response.json())
             .then(data => {
                 setNotificaciones(data);
-                console.log("Notificaciones cargadas desde la API:", data);
             })
             .catch(() => toast.error("Error al cargar notificaciones"))
             .finally(() => setLoading(false));
@@ -40,13 +145,11 @@ const App = () => {
             ...prevForm,
             [name]: type === 'checkbox' ? checked : value
         }));
-        console.log(`Campo actualizado: ${name}, Valor: ${value}`);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        console.log("Datos del formulario que se enviarán:", form);
 
         const method = editMode ? 'PUT' : 'POST';
         const url = editMode ? `/api/notificaciones/${editId}` : '/api/notificaciones';
@@ -67,7 +170,6 @@ const App = () => {
 
             const responseData = await response.json();
             if (!response.ok) {
-                console.error('Error en la respuesta del servidor:', responseData);
                 throw new Error(responseData.message || 'Error en la solicitud al servidor');
             }
 
@@ -80,7 +182,6 @@ const App = () => {
             }
             handleCloseModal();
         } catch (error) {
-            console.error('Error al crear o actualizar la notificación:', error);
             toast.error(`Error al crear o actualizar la notificación: ${error.message}`);
         } finally {
             setLoading(false);
@@ -114,7 +215,6 @@ const App = () => {
                     .then(() => {
                         setNotificaciones(notificaciones.filter(notif => notif.notificacion_id !== id));
                         toast.success("Notificación eliminada exitosamente");
-                        Swal.fire('Eliminado!', 'La notificación ha sido eliminada.', 'success');
                     })
                     .catch(() => toast.error("Error al eliminar la notificación"))
                     .finally(() => setLoading(false));
@@ -130,7 +230,7 @@ const App = () => {
     };
 
     return (
-        <div>
+        <Container>
             <h1>CRUD Notificaciones</h1>
 
             {loading && <div>Cargando...</div>}
@@ -139,7 +239,7 @@ const App = () => {
                 <button onClick={() => setShowModal(true)}>Agregar Notificación</button>
             </div>
 
-            <table>
+            <Table>
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -161,62 +261,60 @@ const App = () => {
                             <td>{notif.leido ? 'Sí' : 'No'}</td>
                             <td>{notif.fecha}</td>
                             <td>
-                                <button onClick={() => handleEdit(notif)}>Editar</button>
-                                <button onClick={() => handleDelete(notif.notificacion_id)}>Eliminar</button>
+                                <ActionButton actionType="edit" onClick={() => handleEdit(notif)}>Editar</ActionButton>
+                                <ActionButton actionType="delete" onClick={() => handleDelete(notif.notificacion_id)}>Eliminar</ActionButton>
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </Table>
 
             {showModal && (
-                <div>
-                    <div>
+                <ModalOverlay>
+                    <ModalContent>
                         <div>
                             <h5>{editMode ? 'Editar Notificación' : 'Agregar Notificación'}</h5>
                             <button onClick={handleCloseModal}>Cerrar</button>
                         </div>
-                        <div>
-                            <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Usuario ID</label>
-                                    <input
-                                        type="number"
-                                        name="usuario_id"
-                                        value={form.usuario_id}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label>Estudiante ID</label>
-                                    <input
-                                        type="number"
-                                        name="estudiante_id"
-                                        value={form.estudiante_id}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label>Mensaje</label>
-                                    <textarea name="mensaje" value={form.mensaje} onChange={handleChange} required></textarea>
-                                </div>
-                                <div>
-                                    <input type="checkbox" name="leido" checked={form.leido} onChange={handleChange} />
-                                    <label>Leído</label>
-                                </div>
-                                <button type="submit" disabled={loading}>
-                                    {editMode ? 'Actualizar Notificación' : 'Agregar Notificación'}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                        <Form onSubmit={handleSubmit}>
+                            <div>
+                                <Label>Usuario ID</Label>
+                                <Input
+                                    type="number"
+                                    name="usuario_id"
+                                    value={form.usuario_id}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <Label>Estudiante ID</Label>
+                                <Input
+                                    type="number"
+                                    name="estudiante_id"
+                                    value={form.estudiante_id}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <Label>Mensaje</Label>
+                                <TextArea name="mensaje" value={form.mensaje} onChange={handleChange} required></TextArea>
+                            </div>
+                            <div>
+                                <Input type="checkbox" name="leido" checked={form.leido} onChange={handleChange} />
+                                <Label>Leído</Label>
+                            </div>
+                            <SubmitButton type="submit" disabled={loading}>
+                                {editMode ? 'Actualizar Notificación' : 'Agregar Notificación'}
+                            </SubmitButton>
+                        </Form>
+                    </ModalContent>
+                </ModalOverlay>
             )}
 
             <ToastContainer />
-        </div>
+        </Container>
     );
 };
 

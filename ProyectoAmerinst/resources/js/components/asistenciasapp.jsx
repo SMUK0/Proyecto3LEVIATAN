@@ -2,6 +2,120 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Importar CSS para las notificaciones
+import styled from 'styled-components';
+
+// Estilos para el contenedor principal
+const Container = styled.div`
+    padding: 20px;
+    background-color: #f4f4f9;
+    min-height: 100vh;
+`;
+
+// Estilos para la tabla
+const Table = styled.table`
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #870e20;
+        color: white;
+    }
+`;
+
+// Estilos para los botones de acción
+const ActionButton = styled.button`
+    background-color: ${({ actionType }) => actionType === 'edit' ? '#007bff' : '#dc3545'};
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ actionType }) => actionType === 'edit' ? '#0056b3' : '#c82333'};
+    }
+`;
+
+// Estilos para el modal
+const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+const ModalContent = styled.div`
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 500px;
+    max-width: 90%;
+`;
+
+// Estilos para el formulario dentro del modal
+const Form = styled.form`
+    display: flex;
+    flex-direction: column;
+`;
+
+const Label = styled.label`
+    margin-top: 10px;
+    font-weight: bold;
+`;
+
+const Input = styled.input`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const Select = styled.select`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const TextArea = styled.textarea`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const SubmitButton = styled.button`
+    background-color: #870e20;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #a22835;
+    }
+
+    &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+`;
 
 const AsistenciasApp = () => {
     const [asistencias, setAsistencias] = useState([]);
@@ -76,18 +190,9 @@ const AsistenciasApp = () => {
             body: JSON.stringify(form)
         })
             .then(async (response) => {
-                console.log("Respuesta del servidor completa:", response);
-
                 if (!response.ok) {
-                    const text = await response.text();
-                    if (text.startsWith('<!DOCTYPE html>')) {
-                        console.error("Se recibió HTML en lugar de JSON.");
-                        throw new Error("Error inesperado: El servidor devolvió HTML en lugar de JSON.");
-                    }
-                    console.error("Respuesta no válida, cuerpo del servidor:", text);
-                    throw new Error(text);
+                    throw new Error(await response.text());
                 }
-
                 return response.json();
             })
             .then(data => {
@@ -102,13 +207,9 @@ const AsistenciasApp = () => {
                 setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: 'Presente', observaciones: '' });
                 setEditMode(false);
             })
-            .catch((error) => {
-                console.error("Error al crear o actualizar la asistencia:", error);
-                toast.error("Error al crear o actualizar la asistencia: " + error.message);
-            })
+            .catch((error) => toast.error("Error al crear o actualizar la asistencia: " + error.message))
             .finally(() => setLoading(false));
     };
-
 
     const handleEdit = (asistencia) => {
         setForm({
@@ -163,7 +264,7 @@ const AsistenciasApp = () => {
     };
 
     return (
-        <div>
+        <Container>
             {loading && <div>Cargando...</div>}
 
             <div>
@@ -174,7 +275,7 @@ const AsistenciasApp = () => {
                 }}>Agregar Asistencia</button>
             </div>
 
-            <table>
+            <Table>
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -194,70 +295,63 @@ const AsistenciasApp = () => {
                             <td>{asistencia.fecha}</td>
                             <td>{asistencia.estado}</td>
                             <td>
-                                <button onClick={() => handleEdit(asistencia)}>Editar</button>
-                                <button onClick={() => handleDelete(asistencia.asistencia_id)}>Eliminar</button>
+                                <ActionButton actionType="edit" onClick={() => handleEdit(asistencia)}>Editar</ActionButton>
+                                <ActionButton actionType="delete" onClick={() => handleDelete(asistencia.asistencia_id)}>Eliminar</ActionButton>
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </Table>
 
             {showModal && (
-                <div>
-                    <div>
+                <ModalOverlay>
+                    <ModalContent>
                         <div>
                             <h5>{editMode ? 'Editar Asistencia' : 'Agregar Asistencia'}</h5>
                             <button onClick={handleCloseModal}>Cerrar</button>
                         </div>
-                        <div>
-                            <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Estudiante</label>
-                                    <select name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required>
-                                        <option value="">Seleccione un estudiante</option>
-                                        {estudiantes.map(estudiante => (
-                                            <option key={estudiante.estudiante_id} value={estudiante.estudiante_id}>
-                                                {estudiante.nombre} {estudiante.apellido}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Curso</label>
-                                    <input
-                                        type="text"
-                                        name="curso"
-                                        value={getCursoNombre(form.curso_id)}
-                                        readOnly
-                                    />
-                                </div>
-                                <div>
-                                    <label>Fecha</label>
-                                    <input type="date" name="fecha" value={form.fecha} readOnly />
-                                </div>
-                                <div>
-                                    <label>Estado</label>
-                                    <select name="estado" value={form.estado} onChange={handleChange} required>
-                                        <option value="Presente">Presente</option>
-                                        <option value="Ausente">Ausente</option>
-                                        <option value="Tarde">Tarde</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Observaciones</label>
-                                    <textarea name="observaciones" value={form.observaciones} onChange={handleChange}></textarea>
-                                </div>
-                                <button type="submit" disabled={loading}>
-                                    {editMode ? 'Actualizar Asistencia' : 'Agregar Asistencia'}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                        <Form onSubmit={handleSubmit}>
+                            <div>
+                                <Label>Estudiante</Label>
+                                <Select name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required>
+                                    <option value="">Seleccione un estudiante</option>
+                                    {estudiantes.map(estudiante => (
+                                        <option key={estudiante.estudiante_id} value={estudiante.estudiante_id}>
+                                            {estudiante.nombre} {estudiante.apellido}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <div>
+                                <Label>Curso</Label>
+                                <Input type="text" name="curso" value={getCursoNombre(form.curso_id)} readOnly />
+                            </div>
+                            <div>
+                                <Label>Fecha</Label>
+                                <Input type="date" name="fecha" value={form.fecha} readOnly />
+                            </div>
+                            <div>
+                                <Label>Estado</Label>
+                                <Select name="estado" value={form.estado} onChange={handleChange} required>
+                                    <option value="Presente">Presente</option>
+                                    <option value="Ausente">Ausente</option>
+                                    <option value="Tarde">Tarde</option>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label>Observaciones</Label>
+                                <TextArea name="observaciones" value={form.observaciones} onChange={handleChange}></TextArea>
+                            </div>
+                            <SubmitButton type="submit" disabled={loading}>
+                                {editMode ? 'Actualizar Asistencia' : 'Agregar Asistencia'}
+                            </SubmitButton>
+                        </Form>
+                    </ModalContent>
+                </ModalOverlay>
             )}
 
             <ToastContainer />
-        </div>
+        </Container>
     );
 };
 

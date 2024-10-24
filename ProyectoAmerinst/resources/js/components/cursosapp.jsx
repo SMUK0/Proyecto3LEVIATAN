@@ -2,13 +2,116 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
+import styled from 'styled-components';
+
+// Estilos para el contenedor principal
+const Container = styled.div`
+    padding: 20px;
+    background-color: #f4f4f9;
+    min-height: 100vh;
+`;
+
+// Estilos para la tabla
+const Table = styled.table`
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #870e20;
+        color: white;
+    }
+`;
+
+// Estilos para los botones de acción
+const ActionButton = styled.button`
+    background-color: ${({ actionType }) => actionType === 'edit' ? '#007bff' : '#dc3545'};
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ actionType }) => actionType === 'edit' ? '#0056b3' : '#c82333'};
+    }
+`;
+
+// Estilos para el modal
+const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+const ModalContent = styled.div`
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 500px;
+    max-width: 90%;
+`;
+
+// Estilos para el formulario dentro del modal
+const Form = styled.form`
+    display: flex;
+    flex-direction: column;
+`;
+
+const Label = styled.label`
+    margin-top: 10px;
+    font-weight: bold;
+`;
+
+const Input = styled.input`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const Select = styled.select`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const SubmitButton = styled.button`
+    background-color: #870e20;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #a22835;
+    }
+
+    &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+`;
 
 const CursosApp = () => {
     const [cursos, setCursos] = useState([]);
-    const [form, setForm] = useState({
-        nombre: '',
-        grado: ''
-    });
+    const [form, setForm] = useState({ nombre: '', grado: '' });
     const [editMode, setEditMode] = useState(false);
     const [editId, setEditId] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -22,10 +125,7 @@ const CursosApp = () => {
     }, []);
 
     const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        });
+        setForm({ ...form, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = (e) => {
@@ -36,47 +136,39 @@ const CursosApp = () => {
         const url = editMode ? `/api/cursos/${editId}` : '/api/cursos';
 
         fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            method,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(form)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (editMode) {
-                setCursos(cursos.map(curso => curso.curso_id === editId ? data : curso));
-                toast.success("Curso actualizado exitosamente");
-            } else {
-                setCursos([...cursos, data]);
-                toast.success("Curso agregado exitosamente");
-            }
-            setShowModal(false);
-            setForm({ nombre: '', grado: '' });  // Reiniciar formulario
-            setEditMode(false);                  // Reiniciar modo de edición
-        })
-        .catch(() => {
-            toast.error("Error al crear o actualizar el curso");
-        })
-        .finally(() => setLoading(false));
+            .then(response => response.json())
+            .then(data => {
+                if (editMode) {
+                    setCursos(cursos.map(curso => curso.curso_id === editId ? data : curso));
+                    toast.success("Curso actualizado exitosamente");
+                } else {
+                    setCursos([...cursos, data]);
+                    toast.success("Curso agregado exitosamente");
+                }
+                setShowModal(false);
+                setForm({ nombre: '', grado: '' });
+                setEditMode(false);
+                setEditId(null);
+            })
+            .catch(() => toast.error("Error al crear o actualizar el curso"))
+            .finally(() => setLoading(false));
     };
 
-    // Abrir el modal para agregar un curso
     const handleShowAddForm = () => {
-        setForm({ nombre: '', grado: '' });  // Reiniciar formulario
-        setEditMode(false);                  // Asegurarse de que no está en modo edición
-        setShowModal(true);                  // Mostrar el modal
+        setForm({ nombre: '', grado: '' });
+        setEditMode(false);
+        setShowModal(true);
     };
 
-    // Abrir el modal para editar un curso
     const handleEdit = (curso) => {
-        setForm({
-            nombre: curso.nombre,
-            grado: curso.grado
-        });
+        setForm({ nombre: curso.nombre, grado: curso.grado });
         setEditId(curso.curso_id);
         setEditMode(true);
-        setShowModal(true);                  // Mostrar el modal en modo edición
+        setShowModal(true);
     };
 
     const handleDelete = (id) => {
@@ -91,28 +183,24 @@ const CursosApp = () => {
             if (result.isConfirmed) {
                 setLoading(true);
                 fetch(`/api/cursos/${id}`, { method: 'DELETE' })
-                .then(() => {
-                    setCursos(cursos.filter(curso => curso.curso_id !== id));
-                    toast.success("Curso eliminado exitosamente");
-                    Swal.fire('Eliminado!', 'El curso ha sido eliminado.', 'success');
-                })
-                .catch(() => {
-                    toast.error("Error al eliminar curso");
-                })
-                .finally(() => setLoading(false));
+                    .then(() => {
+                        setCursos(cursos.filter(curso => curso.curso_id !== id));
+                        toast.success("Curso eliminado exitosamente");
+                        Swal.fire('Eliminado!', 'El curso ha sido eliminado.', 'success');
+                    })
+                    .catch(() => toast.error("Error al eliminar curso"))
+                    .finally(() => setLoading(false));
             }
         });
     };
 
-    // Cerrar el modal y reiniciar el formulario
     const handleCloseModal = () => {
         setShowModal(false);
-        setForm({ nombre: '', grado: '' });  // Reiniciar formulario al cerrar
-        setEditMode(false);                  // Reiniciar modo de edición
-        setEditId(null);                     // Limpiar el ID de edición
+        setForm({ nombre: '', grado: '' });
+        setEditMode(false);
+        setEditId(null);
     };
 
-    // Opciones para los grados
     const opcionesGrado = [
         { value: '1er Grado', label: '1er Grado' },
         { value: '2do Grado', label: '2do Grado' },
@@ -125,14 +213,14 @@ const CursosApp = () => {
     ];
 
     return (
-        <div>
+        <Container>
             {loading && <div>Cargando...</div>}
 
             <div>
                 <button onClick={handleShowAddForm}>Agregar Curso</button>
             </div>
 
-            <table>
+            <Table>
                 <thead>
                     <tr>
                         <th>Nombre</th>
@@ -146,49 +234,47 @@ const CursosApp = () => {
                             <td>{curso.nombre}</td>
                             <td>{curso.grado}</td>
                             <td>
-                                <button onClick={() => handleEdit(curso)}>Editar</button>
-                                <button onClick={() => handleDelete(curso.curso_id)}>Eliminar</button>
+                                <ActionButton actionType="edit" onClick={() => handleEdit(curso)}>Editar</ActionButton>
+                                <ActionButton actionType="delete" onClick={() => handleDelete(curso.curso_id)}>Eliminar</ActionButton>
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </Table>
 
             {showModal && (
-                <div>
-                    <div>
+                <ModalOverlay>
+                    <ModalContent>
                         <div>
                             <h5>{editMode ? 'Editar Curso' : 'Agregar Curso'}</h5>
                             <button onClick={handleCloseModal}>Cerrar</button>
                         </div>
-                        <div>
-                            <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Nombre</label>
-                                    <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
-                                </div>
-                                <div>
-                                    <label>Grado</label>
-                                    <select name="grado" value={form.grado} onChange={handleChange} required>
-                                        <option value="">Selecciona un grado</option>
-                                        {opcionesGrado.map((opcion) => (
-                                            <option key={opcion.value} value={opcion.value}>
-                                                {opcion.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <button type="submit" disabled={loading}>
-                                    {editMode ? 'Actualizar Curso' : 'Agregar Curso'}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                        <Form onSubmit={handleSubmit}>
+                            <div>
+                                <Label>Nombre</Label>
+                                <Input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+                            </div>
+                            <div>
+                                <Label>Grado</Label>
+                                <Select name="grado" value={form.grado} onChange={handleChange} required>
+                                    <option value="">Selecciona un grado</option>
+                                    {opcionesGrado.map(opcion => (
+                                        <option key={opcion.value} value={opcion.value}>
+                                            {opcion.label}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <SubmitButton type="submit" disabled={loading}>
+                                {editMode ? 'Actualizar Curso' : 'Agregar Curso'}
+                            </SubmitButton>
+                        </Form>
+                    </ModalContent>
+                </ModalOverlay>
             )}
 
             <ToastContainer />
-        </div>
+        </Container>
     );
 };
 

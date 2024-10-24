@@ -1,6 +1,93 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
+import styled from 'styled-components';
+
+// Estilos para el contenedor principal
+const Container = styled.div`
+    padding: 20px;
+    background-color: #f4f4f9;
+    min-height: 100vh;
+`;
+
+// Estilos para la tabla
+const Table = styled.table`
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #870e20;
+        color: white;
+    }
+`;
+
+// Estilos para los botones de acción
+const ActionButton = styled.button`
+    background-color: ${({ actionType }) => actionType === 'edit' ? '#007bff' : '#dc3545'};
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ actionType }) => actionType === 'edit' ? '#0056b3' : '#c82333'};
+    }
+`;
+
+// Estilos para el modal y el formulario
+const FormContainer = styled.div`
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    margin: 20px auto;
+`;
+
+const Form = styled.form`
+    display: flex;
+    flex-direction: column;
+`;
+
+const Label = styled.label`
+    margin-top: 10px;
+    font-weight: bold;
+`;
+
+const Input = styled.input`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const SubmitButton = styled.button`
+    background-color: #870e20;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #a22835;
+    }
+
+    &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+`;
 
 const App = () => {
     const [relaciones, setRelaciones] = useState([]);
@@ -28,14 +115,14 @@ const App = () => {
         const url = editMode ? `/api/estudiante-padre/${editIds.estudiante_id}/${editIds.padre_id}` : '/api/estudiante-padre';
 
         fetch(url, {
-            method: method,
+            method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(form)
         })
             .then(response => response.json())
             .then(data => {
                 if (editMode) {
-                    setRelaciones(relaciones.map(relacion => 
+                    setRelaciones(relaciones.map(relacion =>
                         (relacion.estudiante_id === editIds.estudiante_id && relacion.padre_id === editIds.padre_id) ? data : relacion
                     ));
                     Swal.fire('Actualizado', 'Relación actualizada exitosamente', 'success');
@@ -77,12 +164,14 @@ const App = () => {
     };
 
     return (
-        <div>
+        <Container>
             <h1>CRUD Estudiante-Padres</h1>
 
-            <button onClick={() => setEditMode(false)}>Agregar Relación</button>
+            <div>
+                <button onClick={() => setEditMode(false)}>Agregar Relación</button>
+            </div>
 
-            <table>
+            <Table>
                 <thead>
                     <tr>
                         <th>Estudiante ID</th>
@@ -96,28 +185,33 @@ const App = () => {
                             <td>{relacion.estudiante_id}</td>
                             <td>{relacion.padre_id}</td>
                             <td>
-                                <button onClick={() => handleEdit(relacion)}>Editar</button>
-                                <button onClick={() => handleDelete(relacion.estudiante_id, relacion.padre_id)}>Eliminar</button>
+                                <ActionButton actionType="edit" onClick={() => handleEdit(relacion)}>Editar</ActionButton>
+                                <ActionButton actionType="delete" onClick={() => handleDelete(relacion.estudiante_id, relacion.padre_id)}>Eliminar</ActionButton>
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </Table>
 
             {editMode && (
-                <form onSubmit={handleSubmit}>
-                    <div>
-                        <label>Estudiante ID</label>
-                        <input type="text" name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required />
-                    </div>
-                    <div>
-                        <label>Padre ID</label>
-                        <input type="text" name="padre_id" value={form.padre_id} onChange={handleChange} required />
-                    </div>
-                    <button type="submit">{editMode ? 'Actualizar' : 'Agregar'}</button>
-                </form>
+                <FormContainer>
+                    <h5>{editMode ? 'Editar Relación' : 'Agregar Relación'}</h5>
+                    <Form onSubmit={handleSubmit}>
+                        <div>
+                            <Label>Estudiante ID</Label>
+                            <Input type="text" name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required />
+                        </div>
+                        <div>
+                            <Label>Padre ID</Label>
+                            <Input type="text" name="padre_id" value={form.padre_id} onChange={handleChange} required />
+                        </div>
+                        <SubmitButton type="submit" disabled={loading}>
+                            {editMode ? 'Actualizar' : 'Agregar'}
+                        </SubmitButton>
+                    </Form>
+                </FormContainer>
             )}
-        </div>
+        </Container>
     );
 };
 

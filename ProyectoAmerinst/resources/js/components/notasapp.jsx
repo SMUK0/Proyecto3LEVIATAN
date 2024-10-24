@@ -2,6 +2,120 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import styled from 'styled-components';
+
+// Estilos para el contenedor principal
+const Container = styled.div`
+    padding: 20px;
+    background-color: #f4f4f9;
+    min-height: 100vh;
+`;
+
+// Estilos para la tabla
+const Table = styled.table`
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #870e20;
+        color: white;
+    }
+`;
+
+// Estilos para los botones de acción
+const ActionButton = styled.button`
+    background-color: ${({ actionType }) => actionType === 'edit' ? '#007bff' : '#dc3545'};
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ actionType }) => actionType === 'edit' ? '#0056b3' : '#c82333'};
+    }
+`;
+
+// Estilos para el modal
+const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+const ModalContent = styled.div`
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 500px;
+    max-width: 90%;
+`;
+
+// Estilos para el formulario dentro del modal
+const Form = styled.form`
+    display: flex;
+    flex-direction: column;
+`;
+
+const Label = styled.label`
+    margin-top: 10px;
+    font-weight: bold;
+`;
+
+const Input = styled.input`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const Select = styled.select`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const TextArea = styled.textarea`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const SubmitButton = styled.button`
+    background-color: #870e20;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #a22835;
+    }
+
+    &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+`;
 
 const NotasApp = () => {
     const [notas, setNotas] = useState([]);
@@ -113,11 +227,7 @@ const NotasApp = () => {
         })
             .then(async (response) => {
                 if (!response.ok) {
-                    const text = await response.text();
-                    if (text.startsWith('<!DOCTYPE html>')) {
-                        throw new Error('El servidor devolvió HTML. Posible redireccionamiento.');
-                    }
-                    throw new Error(text);
+                    throw new Error(await response.text());
                 }
                 return response.json();
             })
@@ -133,7 +243,6 @@ const NotasApp = () => {
                 resetForm();
             })
             .catch(error => {
-                console.error('Error al crear o actualizar la nota:', error);
                 let errorMessage = "Error al crear o actualizar la nota";
                 try {
                     const errorData = JSON.parse(error.message);
@@ -203,7 +312,7 @@ const NotasApp = () => {
     };
 
     return (
-        <div>
+        <Container>
             <h1>CRUD Notas</h1>
 
             {loading && <div>Cargando...</div>}
@@ -219,7 +328,7 @@ const NotasApp = () => {
                 </button>
             </div>
 
-            <table>
+            <Table>
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -243,83 +352,81 @@ const NotasApp = () => {
                             <td>{String(nota.nota)}</td>
                             <td>{String(nota.fecha)}</td>
                             <td>
-                                <button onClick={() => handleEdit(nota)}>Editar</button>
-                                <button onClick={() => handleDelete(nota.nota_id)}>Eliminar</button>
+                                <ActionButton actionType="edit" onClick={() => handleEdit(nota)}>Editar</ActionButton>
+                                <ActionButton actionType="delete" onClick={() => handleDelete(nota.nota_id)}>Eliminar</ActionButton>
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </Table>
 
             {showModal && (
-                <div>
-                    <div>
+                <ModalOverlay>
+                    <ModalContent>
                         <div>
                             <h5>{editMode ? 'Editar Nota' : 'Agregar Nota'}</h5>
                             <button onClick={handleCloseModal}>Cerrar</button>
                         </div>
-                        <div>
-                            <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Estudiante</label>
-                                    <select name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required>
-                                        <option value="">Seleccione un estudiante</option>
-                                        {estudiantes.map(estudiante => (
-                                            <option key={estudiante.estudiante_id} value={estudiante.estudiante_id}>
-                                                {estudiante.nombre} {estudiante.apellido}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Curso</label>
-                                    <input type="text" name="curso_id" value={getCursoNombre(form.curso_id)} readOnly />
-                                </div>
-                                <div>
-                                    <label>Materia</label>
-                                    <select name="materia_id" value={form.materia_id} onChange={handleChange} required>
-                                        <option value="">Seleccione una materia</option>
-                                        {materias.map(materia => (
-                                            <option key={materia.materia_id} value={materia.materia_id}>
-                                                {materia.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Maestro ID</label>
-                                    <input type="text" name="maestro_id" value={form.maestro_id} readOnly />
-                                </div>
-                                <div>
-                                    <label>Nota</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        name="nota"
-                                        value={form.nota || ''}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label>Fecha</label>
-                                    <input type="date" name="fecha" value={form.fecha} readOnly />
-                                </div>
-                                <div>
-                                    <label>Observaciones</label>
-                                    <textarea name="observaciones" value={form.observaciones} onChange={handleChange}></textarea>
-                                </div>
-                                <button type="submit" disabled={loading}>
-                                    {editMode ? 'Actualizar Nota' : 'Agregar Nota'}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                        <Form onSubmit={handleSubmit}>
+                            <div>
+                                <Label>Estudiante</Label>
+                                <Select name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required>
+                                    <option value="">Seleccione un estudiante</option>
+                                    {estudiantes.map(estudiante => (
+                                        <option key={estudiante.estudiante_id} value={estudiante.estudiante_id}>
+                                            {estudiante.nombre} {estudiante.apellido}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <div>
+                                <Label>Curso</Label>
+                                <Input type="text" name="curso_id" value={getCursoNombre(form.curso_id)} readOnly />
+                            </div>
+                            <div>
+                                <Label>Materia</Label>
+                                <Select name="materia_id" value={form.materia_id} onChange={handleChange} required>
+                                    <option value="">Seleccione una materia</option>
+                                    {materias.map(materia => (
+                                        <option key={materia.materia_id} value={materia.materia_id}>
+                                            {materia.nombre}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <div>
+                                <Label>Maestro ID</Label>
+                                <Input type="text" name="maestro_id" value={form.maestro_id} readOnly />
+                            </div>
+                            <div>
+                                <Label>Nota</Label>
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    name="nota"
+                                    value={form.nota || ''}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <Label>Fecha</Label>
+                                <Input type="date" name="fecha" value={form.fecha} readOnly />
+                            </div>
+                            <div>
+                                <Label>Observaciones</Label>
+                                <TextArea name="observaciones" value={form.observaciones} onChange={handleChange}></TextArea>
+                            </div>
+                            <SubmitButton type="submit" disabled={loading}>
+                                {editMode ? 'Actualizar Nota' : 'Agregar Nota'}
+                            </SubmitButton>
+                        </Form>
+                    </ModalContent>
+                </ModalOverlay>
             )}
 
             <ToastContainer />
-        </div>
+        </Container>
     );
 };
 

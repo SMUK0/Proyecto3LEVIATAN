@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ToastContainer, toast } from 'react-toastify';
 import Swal from 'sweetalert2';
+import styled from 'styled-components';
 
 // Definir la función generarEmail
 const generarEmail = (nombre, apellido) => {
@@ -10,9 +11,114 @@ const generarEmail = (nombre, apellido) => {
     return `${iniciales}${Math.floor(Math.random() * 1000)}@${dominio}`;
 };
 
+// Estilos para el contenedor principal
+const Container = styled.div`
+    padding: 20px;
+    background-color: #f4f4f9;
+    min-height: 100vh;
+`;
+
+// Estilos para la tabla
+const Table = styled.table`
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #870e20;
+        color: white;
+    }
+`;
+
+// Estilos para los botones de acción
+const ActionButton = styled.button`
+    background-color: ${({ actionType }) => actionType === 'edit' ? '#007bff' : '#dc3545'};
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ actionType }) => actionType === 'edit' ? '#0056b3' : '#c82333'};
+    }
+`;
+
+// Estilos para el modal
+const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+const ModalContent = styled.div`
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 500px;
+    max-width: 90%;
+`;
+
+// Estilos para el formulario dentro del modal
+const Form = styled.form`
+    display: flex;
+    flex-direction: column;
+`;
+
+const Label = styled.label`
+    margin-top: 10px;
+    font-weight: bold;
+`;
+
+const Input = styled.input`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const Select = styled.select`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const SubmitButton = styled.button`
+    background-color: #870e20;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #a22835;
+    }
+
+    &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+`;
+
 const UsuariosApp = () => {
     const [usuarios, setUsuarios] = useState([]);
-    const [roles, setRoles] = useState([]);  // Estado para los roles
+    const [roles, setRoles] = useState([]);
     const [form, setForm] = useState({
         nombre: '',
         apellido: '',
@@ -35,21 +141,17 @@ const UsuariosApp = () => {
 
         // Cargar roles desde la API
         fetch('/api/roles')
-        .then(response => response.json())
-        .then(data => {
-            console.log('Roles:', data); // Verifica los datos en la consola
-            setRoles(data);
-        })
-        .catch(() => toast.error("Error al cargar roles"));
+            .then(response => response.json())
+            .then(data => setRoles(data))
+            .catch(() => toast.error("Error al cargar roles"));
     }, []);
 
     // Función para obtener el nombre del rol
     const obtenerNombreRol = (rol_id) => {
         const rol = roles.find(r => r.rol_id === rol_id);
-        return rol ? rol.nombre : 'Sin rol';  // Retorna el nombre del rol o 'Sin rol' si no se encuentra
+        return rol ? rol.nombre : 'Sin rol';
     };
 
-    // Definir la función validateForm para validar el formulario
     const validateForm = () => {
         const newErrors = {};
 
@@ -83,7 +185,7 @@ const UsuariosApp = () => {
         }
 
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0; // Retorna true si no hay errores
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleChange = (e) => {
@@ -91,7 +193,6 @@ const UsuariosApp = () => {
         setForm(prevForm => {
             const newForm = { ...prevForm, [name]: value };
 
-            // Generar email cuando se completa el apellido
             if (name === 'apellido') {
                 newForm.email = generarEmail(newForm.nombre, newForm.apellido);
             }
@@ -118,7 +219,7 @@ const UsuariosApp = () => {
         const url = editMode ? `/api/usuarios/${editId}` : '/api/usuarios';
 
         fetch(url, {
-            method: method,
+            method,
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
@@ -145,7 +246,6 @@ const UsuariosApp = () => {
                 setShowModal(false);
             })
             .catch(error => {
-                console.error('Error en la operación:', error);
                 toast.error('Error al crear o actualizar el usuario: ' + error.message);
             })
             .finally(() => setLoading(false));
@@ -171,7 +271,6 @@ const UsuariosApp = () => {
                         toast.success('Usuario eliminado exitosamente');
                     })
                     .catch(error => {
-                        console.error('Error al eliminar usuario:', error);
                         toast.error('Error al eliminar usuario: ' + error.message);
                     })
                     .finally(() => setLoading(false));
@@ -205,14 +304,14 @@ const UsuariosApp = () => {
     };
 
     return (
-        <div>
+        <Container>
             {loading && <div>Cargando...</div>}
 
             <div>
                 <button onClick={handleShowAddForm}>Agregar Usuario</button>
             </div>
 
-            <table>
+            <Table>
                 <thead>
                     <tr>
                         <th>Nombre y Apellido</th>
@@ -228,66 +327,64 @@ const UsuariosApp = () => {
                             <td>{usuario.email}</td>
                             <td>{obtenerNombreRol(usuario.rol_id)}</td>
                             <td>
-                                <button onClick={() => handleEdit(usuario)}>Editar</button>
-                                <button onClick={() => handleDelete(usuario.user_id)}>Eliminar</button>
+                                <ActionButton actionType="edit" onClick={() => handleEdit(usuario)}>Editar</ActionButton>
+                                <ActionButton actionType="delete" onClick={() => handleDelete(usuario.user_id)}>Eliminar</ActionButton>
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </Table>
 
             {showModal && (
-                <div>
-                    <div>
+                <ModalOverlay>
+                    <ModalContent>
                         <div>
                             <h5>{editMode ? 'Editar Usuario' : 'Agregar Usuario'}</h5>
                             <button onClick={handleCloseModal}>Cerrar</button>
                         </div>
-                        <div>
-                            <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Nombre</label>
-                                    <input name="nombre" value={form.nombre} onChange={handleChange} required />
-                                    {errors.nombre && <div>{errors.nombre}</div>}
-                                </div>
-                                <div>
-                                    <label>Apellido</label>
-                                    <input name="apellido" value={form.apellido} onChange={handleChange} required />
-                                    {errors.apellido && <div>{errors.apellido}</div>}
-                                </div>
-                                <div>
-                                    <label>Email</label>
-                                    <input name="email" value={form.email} onChange={handleChange} required readOnly />
-                                    {errors.email && <div>{errors.email}</div>}
-                                </div>
-                                <div>
-                                    <label>Contraseña</label>
-                                    <input name="password" value={form.password} onChange={handleChange} required={!editMode} />
-                                    {errors.password && <div>{errors.password}</div>}
-                                </div>
-                                <div>
-                                    <label>Rol ID</label>
-                                    <select name="rol_id" value={form.rol_id} onChange={handleChange} required>
-                                        <option value="">Selecciona un rol</option>
-                                        {roles.map((rol) => (
-                                            <option key={rol.rol_id} value={rol.rol_id}>
-                                                {rol.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.rol_id && <div>{errors.rol_id}</div>}
-                                </div>
-                                <button type="submit" disabled={loading}>
-                                    {editMode ? 'Actualizar Usuario' : 'Agregar Usuario'}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                        <Form onSubmit={handleSubmit}>
+                            <div>
+                                <Label>Nombre</Label>
+                                <Input name="nombre" value={form.nombre} onChange={handleChange} required />
+                                {errors.nombre && <div>{errors.nombre}</div>}
+                            </div>
+                            <div>
+                                <Label>Apellido</Label>
+                                <Input name="apellido" value={form.apellido} onChange={handleChange} required />
+                                {errors.apellido && <div>{errors.apellido}</div>}
+                            </div>
+                            <div>
+                                <Label>Email</Label>
+                                <Input name="email" value={form.email} onChange={handleChange} required readOnly />
+                                {errors.email && <div>{errors.email}</div>}
+                            </div>
+                            <div>
+                                <Label>Contraseña</Label>
+                                <Input type="password" name="password" value={form.password} onChange={handleChange} required={!editMode} />
+                                {errors.password && <div>{errors.password}</div>}
+                            </div>
+                            <div>
+                                <Label>Rol ID</Label>
+                                <Select name="rol_id" value={form.rol_id} onChange={handleChange} required>
+                                    <option value="">Selecciona un rol</option>
+                                    {roles.map((rol) => (
+                                        <option key={rol.rol_id} value={rol.rol_id}>
+                                            {rol.nombre}
+                                        </option>
+                                    ))}
+                                </Select>
+                                {errors.rol_id && <div>{errors.rol_id}</div>}
+                            </div>
+                            <SubmitButton type="submit" disabled={loading}>
+                                {editMode ? 'Actualizar Usuario' : 'Agregar Usuario'}
+                            </SubmitButton>
+                        </Form>
+                    </ModalContent>
+                </ModalOverlay>
             )}
 
             <ToastContainer />
-        </div>
+        </Container>
     );
 };
 

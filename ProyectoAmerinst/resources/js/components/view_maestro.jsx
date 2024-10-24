@@ -5,6 +5,106 @@ import NotasApp from './notasapp.jsx';
 import NotificacionesApp from './notificacionesapp.jsx'; // Importamos NotificacionesApp
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
+import styled from 'styled-components';
+
+// Estilos para el contenedor principal
+const Container = styled.div`
+    display: flex;
+    height: 100vh;
+    background-color: #f4f4f9;
+`;
+
+// Estilos para el menú lateral
+const Sidebar = styled.div`
+    width: ${({ isCollapsed }) => (isCollapsed ? '50px' : '250px')};
+    background-color: #870e20;
+    color: white;
+    padding: ${({ isCollapsed }) => (isCollapsed ? '10px' : '20px')};
+    transition: width 0.3s ease;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+`;
+
+// Estilos para los botones del menú
+const MenuButton = styled.button`
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+    margin-bottom: 10px;
+    border-radius: 5px;
+
+    &:hover {
+        background-color: #a22835;
+    }
+`;
+
+// Estilos para el título del menú
+const MenuTitle = styled.h2`
+    color: white;
+    margin-bottom: 20px;
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+`;
+
+// Estilos para el área principal
+const MainArea = styled.div`
+    flex: 1;
+    padding: 20px;
+    background-color: #f4f4f9;
+    border-left: 1px solid #ccc;
+`;
+
+// Estilos para el contenedor de usuario
+const UserDropdown = styled.div`
+    position: relative;
+    margin-left: auto;
+    padding: 10px;
+`;
+
+// Estilos para el menú desplegable
+const DropdownMenu = styled.div`
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px;
+`;
+
+// Estilos para el botón de cerrar sesión
+const LogoutButton = styled.button`
+    background-color: #870e20;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    margin-top: 10px;
+
+    &:hover {
+        background-color: #a22835;
+    }
+`;
+
+// Estilos para el icono de usuario
+const UserIcon = styled(FontAwesomeIcon)`
+    color: #870e20;
+    cursor: pointer;
+
+    &:hover {
+        color: #a22835;
+    }
+`;
 
 const ViewMaestro = () => {
     const [activeComponent, setActiveComponent] = useState('');
@@ -59,55 +159,50 @@ const ViewMaestro = () => {
     };
 
     return (
-        <div style={{ display: 'flex' }}>
-            <div style={{
-                width: isMenuCollapsed ? '50px' : '250px',
-                backgroundColor: '#f8f9fa',
-                padding: isMenuCollapsed ? '10px' : '20px',
-                transition: 'width 0.3s ease',
-            }}>
-                <button onClick={toggleMenu}>
+        <Container>
+            <Sidebar isCollapsed={isMenuCollapsed}>
+                <MenuButton onClick={toggleMenu}>
                     {isMenuCollapsed ? '►' : '◄'}
-                </button>
+                </MenuButton>
                 {!isMenuCollapsed && (
                     <div>
-                        <h2>Menú</h2>
+                        <MenuTitle>Menú</MenuTitle>
                         <ul style={{ listStyleType: 'none', padding: 0 }}>
                             <li>
-                                <button onClick={() => setActiveComponent('asistencias')}>
+                                <MenuButton onClick={() => setActiveComponent('asistencias')}>
                                     Asistencias
-                                </button>
+                                </MenuButton>
                             </li>
                             <li>
-                                <button onClick={() => setActiveComponent('notas')}>
+                                <MenuButton onClick={() => setActiveComponent('notas')}>
                                     Notas
-                                </button>
+                                </MenuButton>
                             </li>
                             <li>
-                                <button onClick={() => setActiveComponent('notificaciones')}>
+                                <MenuButton onClick={() => setActiveComponent('notificaciones')}>
                                     Notificaciones
-                                </button>
+                                </MenuButton>
                             </li>
                         </ul>
                     </div>
                 )}
-            </div>
+            </Sidebar>
 
-            <div style={{ flex: 1, padding: '20px' }}>
+            <MainArea>
                 {renderComponent()}
-            </div>
+            </MainArea>
 
-            <div ref={dropdownRef}>
-                <FontAwesomeIcon icon={faUser} size="2x" onClick={toggleDropdown} />
+            <UserDropdown ref={dropdownRef}>
+                <UserIcon icon={faUser} size="2x" onClick={toggleDropdown} />
                 {isDropdownOpen && (
-                    <div>
+                    <DropdownMenu>
                         <p>Usuario: {user?.nombre} {user?.apellido}</p>
                         <p>Rol: {user?.rol === 2 ? 'Maestro' : user?.rol}</p>
-                        <button onClick={handleLogout}>Cerrar Sesión</button>
-                    </div>
+                        <LogoutButton onClick={handleLogout}>Cerrar Sesión</LogoutButton>
+                    </DropdownMenu>
                 )}
-            </div>
-        </div>
+            </UserDropdown>
+        </Container>
     );
 };
 

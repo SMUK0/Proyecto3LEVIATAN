@@ -2,15 +2,121 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ToastContainer, toast } from 'react-toastify';
 import Swal from 'sweetalert2';
+import styled from 'styled-components';
+
+// Estilos para el contenedor principal
+const Container = styled.div`
+    padding: 20px;
+    background-color: #f4f4f9;
+    min-height: 100vh;
+`;
+
+// Estilos para la tabla
+const Table = styled.table`
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #870e20;
+        color: white;
+    }
+`;
+
+// Estilos para los botones de acción
+const ActionButton = styled.button`
+    background-color: ${({ actionType }) => actionType === 'edit' ? '#007bff' : '#dc3545'};
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ actionType }) => actionType === 'edit' ? '#0056b3' : '#c82333'};
+    }
+`;
+
+// Estilos para el modal
+const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+const ModalContent = styled.div`
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 500px;
+    max-width: 90%;
+`;
+
+// Estilos para el formulario dentro del modal
+const Form = styled.form`
+    display: flex;
+    flex-direction: column;
+`;
+
+const Label = styled.label`
+    margin-top: 10px;
+    font-weight: bold;
+`;
+
+const Input = styled.input`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const Select = styled.select`
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+`;
+
+const SubmitButton = styled.button`
+    background-color: #870e20;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #a22835;
+    }
+
+    &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+`;
 
 const EstudiantesApp = () => {
     const [estudiantes, setEstudiantes] = useState([]);
-    const [cursos, setCursos] = useState([]); // Cursos para llenar el select de grados
+    const [cursos, setCursos] = useState([]);
     const [form, setForm] = useState({
         nombre: '',
         apellido: '',
         fecha_nacimiento: '',
-        curso_id: ''  // Almacena el curso_id en lugar del nombre del grado
+        curso_id: ''
     });
     const [editMode, setEditMode] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -21,41 +127,28 @@ const EstudiantesApp = () => {
         // Cargar estudiantes
         fetch('/api/estudiantes')
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al cargar estudiantes');
-                }
+                if (!response.ok) throw new Error('Error al cargar estudiantes');
                 return response.json();
             })
-            .then(data => {
-                console.log('Estudiantes cargados:', data);  // Verifica los datos de estudiantes cargados
-                setEstudiantes(data);
-            })
+            .then(data => setEstudiantes(data))
             .catch(() => toast.error("Error al cargar estudiantes"));
 
         // Cargar cursos (grados)
         fetch('/api/cursos')
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al cargar cursos');
-                }
+                if (!response.ok) throw new Error('Error al cargar cursos');
                 return response.json();
             })
-            .then(data => {
-                console.log('Cursos cargados:', data);  // Verifica los datos de cursos cargados
-                setCursos(data);
-            })
+            .then(data => setCursos(data))
             .catch(() => toast.error("Error al cargar cursos"));
     }, []);
 
-    // Calcular la edad desde la fecha de nacimiento
     const calculateAge = (fecha_nacimiento) => {
         const birthDate = new Date(fecha_nacimiento);
         const today = new Date();
         let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
         return age;
     };
 
@@ -65,45 +158,40 @@ const EstudiantesApp = () => {
     };
 
     const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        });
+        setForm({ ...form, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
         if (!isValidAge(form.fecha_nacimiento)) {
             toast.error("La edad debe estar entre 12 y 20 años.");
             return;
         }
-
         setLoading(true);
 
         const method = editMode ? 'PUT' : 'POST';
         const url = editMode ? `/api/estudiantes/${editId}` : '/api/estudiantes';
 
         fetch(url, {
-            method: method,
+            method,
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(form)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (editMode) {
-                setEstudiantes(estudiantes.map(est => est.estudiante_id === editId ? data : est));
-                toast.success("Estudiante actualizado exitosamente");
-            } else {
-                setEstudiantes([...estudiantes, data]);
-                toast.success("Estudiante agregado exitosamente");
-            }
-            handleCloseModal(); // Cerrar el modal después de guardar
-        })
-        .catch(() => toast.error("Error al crear o actualizar el estudiante"))
-        .finally(() => setLoading(false));
+            .then(response => response.json())
+            .then(data => {
+                if (editMode) {
+                    setEstudiantes(estudiantes.map(est => est.estudiante_id === editId ? data : est));
+                    toast.success("Estudiante actualizado exitosamente");
+                } else {
+                    setEstudiantes([...estudiantes, data]);
+                    toast.success("Estudiante agregado exitosamente");
+                }
+                handleCloseModal();
+            })
+            .catch(() => toast.error("Error al crear o actualizar el estudiante"))
+            .finally(() => setLoading(false));
     };
 
     const handleEdit = (estudiante) => {
@@ -111,7 +199,7 @@ const EstudiantesApp = () => {
             nombre: estudiante.nombre,
             apellido: estudiante.apellido,
             fecha_nacimiento: estudiante.fecha_nacimiento,
-            curso_id: estudiante.curso_id  // Almacenar el curso_id en el formulario
+            curso_id: estudiante.curso_id
         });
         setEditId(estudiante.estudiante_id);
         setEditMode(true);
@@ -130,12 +218,12 @@ const EstudiantesApp = () => {
             if (result.isConfirmed) {
                 setLoading(true);
                 fetch(`/api/estudiantes/${id}`, { method: 'DELETE' })
-                .then(() => {
-                    setEstudiantes(estudiantes.filter(est => est.estudiante_id !== id));
-                    toast.success("Estudiante eliminado exitosamente");
-                })
-                .catch(() => toast.error("Error al eliminar estudiante"))
-                .finally(() => setLoading(false));
+                    .then(() => {
+                        setEstudiantes(estudiantes.filter(est => est.estudiante_id !== id));
+                        toast.success("Estudiante eliminado exitosamente");
+                    })
+                    .catch(() => toast.error("Error al eliminar estudiante"))
+                    .finally(() => setLoading(false));
             }
         });
     };
@@ -147,22 +235,13 @@ const EstudiantesApp = () => {
         setEditId(null);
     };
 
-    // Función para obtener el nombre del curso basado en el curso_id
     const getNombreGrado = (cursoId) => {
-        if (!cursos || cursos.length === 0) {
-            console.warn('La lista de cursos está vacía o no se ha cargado correctamente');
-            return 'Sin asignar';
-        }
-
         const curso = cursos.find(curso => curso.curso_id === cursoId);
-        if (!curso) {
-            console.warn(`No se encontró un curso con curso_id: ${cursoId}`); // Log para verificar si el curso existe
-        }
         return curso ? curso.nombre : 'Sin asignar';
     };
 
     return (
-        <div>
+        <Container>
             {loading && <div>Cargando...</div>}
 
             <div>
@@ -173,7 +252,7 @@ const EstudiantesApp = () => {
                 }}>Agregar Estudiante</button>
             </div>
 
-            <table>
+            <Table>
                 <thead>
                     <tr>
                         <th>Nombre Completo</th>
@@ -189,57 +268,55 @@ const EstudiantesApp = () => {
                             <td>{calculateAge(est.fecha_nacimiento)} años</td>
                             <td>{getNombreGrado(est.curso_id)}</td>
                             <td>
-                                <button onClick={() => handleEdit(est)}>Editar</button>
-                                <button onClick={() => handleDelete(est.estudiante_id)}>Eliminar</button>
+                                <ActionButton actionType="edit" onClick={() => handleEdit(est)}>Editar</ActionButton>
+                                <ActionButton actionType="delete" onClick={() => handleDelete(est.estudiante_id)}>Eliminar</ActionButton>
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </Table>
 
             {showModal && (
-                <div>
-                    <div>
+                <ModalOverlay>
+                    <ModalContent>
                         <div>
                             <h5>{editMode ? 'Editar Estudiante' : 'Agregar Estudiante'}</h5>
                             <button onClick={handleCloseModal}>Cerrar</button>
                         </div>
-                        <div>
-                            <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Nombre</label>
-                                    <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
-                                </div>
-                                <div>
-                                    <label>Apellido</label>
-                                    <input type="text" name="apellido" value={form.apellido} onChange={handleChange} required />
-                                </div>
-                                <div>
-                                    <label>Fecha Nacimiento</label>
-                                    <input type="date" name="fecha_nacimiento" value={form.fecha_nacimiento} onChange={handleChange} required />
-                                </div>
-                                <div>
-                                    <label>Grado</label>
-                                    <select name="curso_id" value={form.curso_id} onChange={handleChange} required>
-                                        <option value="">Selecciona un grado</option>
-                                        {cursos.map(curso => (
-                                            <option key={curso.curso_id} value={curso.curso_id}>
-                                                {curso.grado}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <button type="submit" disabled={loading}>
-                                    {editMode ? 'Actualizar Estudiante' : 'Agregar Estudiante'}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                        <Form onSubmit={handleSubmit}>
+                            <div>
+                                <Label>Nombre</Label>
+                                <Input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+                            </div>
+                            <div>
+                                <Label>Apellido</Label>
+                                <Input type="text" name="apellido" value={form.apellido} onChange={handleChange} required />
+                            </div>
+                            <div>
+                                <Label>Fecha Nacimiento</Label>
+                                <Input type="date" name="fecha_nacimiento" value={form.fecha_nacimiento} onChange={handleChange} required />
+                            </div>
+                            <div>
+                                <Label>Grado</Label>
+                                <Select name="curso_id" value={form.curso_id} onChange={handleChange} required>
+                                    <option value="">Selecciona un grado</option>
+                                    {cursos.map(curso => (
+                                        <option key={curso.curso_id} value={curso.curso_id}>
+                                            {curso.grado}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <SubmitButton type="submit" disabled={loading}>
+                                {editMode ? 'Actualizar Estudiante' : 'Agregar Estudiante'}
+                            </SubmitButton>
+                        </Form>
+                    </ModalContent>
+                </ModalOverlay>
             )}
 
             <ToastContainer />
-        </div>
+        </Container>
     );
 };
 

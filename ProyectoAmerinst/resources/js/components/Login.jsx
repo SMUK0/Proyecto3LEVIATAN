@@ -2,6 +2,76 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Para las notificaciones
+import styled from 'styled-components';
+
+// Estilos para el contenedor principal
+const LoginWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4f4f9;
+`;
+
+// Estilos para el formulario
+const LoginForm = styled.form`
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+`;
+
+// Estilos para el título del formulario
+const Title = styled.h2`
+    margin-bottom: 20px;
+    color: #870e20;
+`;
+
+// Estilos para los campos de entrada
+const Input = styled.input`
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+
+    &:focus {
+        border-color: #870e20;
+        outline: none;
+    }
+`;
+
+// Estilos para el botón de enviar
+const SubmitButton = styled.button`
+    width: 100%;
+    padding: 10px;
+    background-color: #870e20;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+        background-color: #a22835;
+    }
+
+    &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+`;
+
+// Estilos para los mensajes de error
+const ErrorMessage = styled.p`
+    color: red;
+    font-size: 14px;
+`;
 
 const Login = () => {
     const [form, setForm] = useState({ email: '', password: '' });
@@ -27,7 +97,7 @@ const Login = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken()
+                    'X-CSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify(form),
             });
@@ -64,13 +134,13 @@ const Login = () => {
     };
 
     return (
-        <div>
-            <h2>Iniciar Sesión</h2>
-            {error && <p>{error}</p>}
-            <form onSubmit={handleSubmit}>
+        <LoginWrapper>
+            <LoginForm onSubmit={handleSubmit}>
+                <Title>Iniciar Sesión</Title>
+                {error && <ErrorMessage>{error}</ErrorMessage>}
                 <div>
                     <label htmlFor="email">Correo electrónico:</label>
-                    <input
+                    <Input
                         type="email"
                         id="email"
                         name="email"
@@ -81,7 +151,7 @@ const Login = () => {
                 </div>
                 <div>
                     <label htmlFor="password">Contraseña:</label>
-                    <input
+                    <Input
                         type="password"
                         id="password"
                         name="password"
@@ -90,12 +160,12 @@ const Login = () => {
                         required
                     />
                 </div>
-                <button type="submit" disabled={loading}>
+                <SubmitButton type="submit" disabled={loading}>
                     {loading ? 'Cargando...' : 'Iniciar Sesión'}
-                </button>
-            </form>
+                </SubmitButton>
+            </LoginForm>
             <ToastContainer />
-        </div>
+        </LoginWrapper>
     );
 };
 
