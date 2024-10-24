@@ -1,6 +1,151 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
+import { ToastContainer, toast } from 'react-toastify';
+import styled from 'styled-components';
+
+// Contenedor de la tabla
+const TableContainer = styled.div`
+  margin: 20px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+`;
+
+// Botón de agregar relación
+const AddButton = styled.button`
+  background-color: #870e20;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #a22835;
+  }
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+// Estilo de la tabla
+const StyledTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  background-color: #f4f4f9;
+  border-radius: 10px;
+  overflow: hidden;
+`;
+
+const TableHeader = styled.th`
+  background-color: #870e20;
+  color: white;
+  padding: 15px;
+  border: 1px solid #ddd;
+  text-align: left;
+`;
+
+const TableRow = styled.tr`
+  &:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+`;
+
+const TableCell = styled.td`
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  text-align: left;
+`;
+
+// Modal para agregar/editar relación
+const Modal = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  width: 90%;
+  max-width: 500px;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const ModalTitle = styled.h5`
+  font-size: 20px;
+  color: #870e20;
+`;
+
+const CloseButton = styled.button`
+  background-color: transparent;
+  color: #870e20;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #a22835;
+  }
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 15px;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+`;
+
+const SubmitButton = styled.button`
+  width: 100%;
+  padding: 15px;
+  background-color: #870e20;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #a22835;
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+`;
 
 const App = () => {
     const [relaciones, setRelaciones] = useState([]);
@@ -77,48 +222,55 @@ const App = () => {
     };
 
     return (
-        <div>
+        <TableContainer>
             <h1>CRUD Estudiante-Padres</h1>
 
-            <button onClick={() => setEditMode(false)}>Agregar Relación</button>
+            <AddButton onClick={() => setEditMode(false)}>Agregar Relación</AddButton>
 
-            <table>
+            <StyledTable>
                 <thead>
                     <tr>
-                        <th>Estudiante ID</th>
-                        <th>Padre ID</th>
-                        <th>Acciones</th>
+                        <TableHeader>Estudiante ID</TableHeader>
+                        <TableHeader>Padre ID</TableHeader>
+                        <TableHeader>Acciones</TableHeader>
                     </tr>
                 </thead>
                 <tbody>
                     {relaciones.map(relacion => (
-                        <tr key={`${relacion.estudiante_id}-${relacion.padre_id}`}>
-                            <td>{relacion.estudiante_id}</td>
-                            <td>{relacion.padre_id}</td>
-                            <td>
-                                <button onClick={() => handleEdit(relacion)}>Editar</button>
-                                <button onClick={() => handleDelete(relacion.estudiante_id, relacion.padre_id)}>Eliminar</button>
-                            </td>
-                        </tr>
+                        <TableRow key={`${relacion.estudiante_id}-${relacion.padre_id}`}>
+                            <TableCell>{relacion.estudiante_id}</TableCell>
+                            <TableCell>{relacion.padre_id}</TableCell>
+                            <TableCell>
+                                <ActionButton variant="edit" onClick={() => handleEdit(relacion)}>Editar</ActionButton>
+                                <ActionButton variant="delete" onClick={() => handleDelete(relacion.estudiante_id, relacion.padre_id)}>Eliminar</ActionButton>
+                            </TableCell>
+                        </TableRow>
                     ))}
                 </tbody>
-            </table>
+            </StyledTable>
 
             {editMode && (
-                <form onSubmit={handleSubmit}>
-                    <div>
-                        <label>Estudiante ID</label>
-                        <input type="text" name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required />
-                    </div>
-                    <div>
-                        <label>Padre ID</label>
-                        <input type="text" name="padre_id" value={form.padre_id} onChange={handleChange} required />
-                    </div>
-                    <button type="submit">{editMode ? 'Actualizar' : 'Agregar'}</button>
-                </form>
+                <Modal>
+                    <ModalHeader>
+                        <ModalTitle>{editMode ? 'Editar Relación' : 'Agregar Relación'}</ModalTitle>
+                        <CloseButton onClick={() => setEditMode(false)}>&times;</CloseButton>
+                    </ModalHeader>
+                    <form onSubmit={handleSubmit}>
+                        <FormGroup>
+                            <Label>Estudiante ID</Label>
+                            <Input type="text" name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required />
+                        </FormGroup>
+                        <FormGroup>
+                            <Label>Padre ID</Label>
+                            <Input type="text" name="padre_id" value={form.padre_id} onChange={handleChange} required />
+                        </FormGroup>
+                        <SubmitButton type="submit">{editMode ? 'Actualizar' : 'Agregar'}</SubmitButton>
+                    </form>
+                </Modal>
             )}
-        </div>
+        </TableContainer>
     );
 };
 
+// Montaje manual para pruebas
 ReactDOM.createRoot(document.getElementById('crud-estudiante-padre')).render(<App />);

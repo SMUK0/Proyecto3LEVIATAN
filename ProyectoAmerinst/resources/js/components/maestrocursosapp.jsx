@@ -2,6 +2,172 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
+import styled from 'styled-components';
+
+// Contenedor de la tabla
+const TableContainer = styled.div`
+  margin: 20px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+`;
+
+// Botón de agregar maestro-curso
+const AddButton = styled.button`
+  background-color: #870e20;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #a22835;
+  }
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+// Estilo de la tabla
+const StyledTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  background-color: #f4f4f9;
+  border-radius: 10px;
+  overflow: hidden;
+`;
+
+const TableHeader = styled.th`
+  background-color: #870e20;
+  color: white;
+  padding: 15px;
+  border: 1px solid #ddd;
+  text-align: left;
+`;
+
+const TableRow = styled.tr`
+  &:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+`;
+
+const TableCell = styled.td`
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  text-align: left;
+`;
+
+// Botones de acción (Editar y Eliminar)
+const ActionButton = styled.button`
+  background-color: ${(props) => (props.variant === 'edit' ? '#4caf50' : '#d95b5e')};
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0 5px;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: ${(props) =>
+      props.variant === 'edit' ? '#45a049' : '#a22835'};
+  }
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+// Modal para agregar/editar maestro-curso
+const Modal = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  width: 90%;
+  max-width: 500px;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const ModalTitle = styled.h5`
+  font-size: 20px;
+  color: #870e20;
+`;
+
+const CloseButton = styled.button`
+  background-color: transparent;
+  color: #870e20;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #a22835;
+  }
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 15px;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+`;
+
+const SubmitButton = styled.button`
+  width: 100%;
+  padding: 15px;
+  background-color: #870e20;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #a22835;
+  }
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+`;
 
 const App = () => {
     const [maestroCursos, setMaestroCursos] = useState([]);
@@ -97,66 +263,70 @@ const App = () => {
     };
 
     return (
-        <div>
+        <TableContainer>
             <h1>CRUD Maestro Cursos</h1>
 
             {loading && <div>Cargando...</div>}
 
-            <div>
-                <button onClick={() => setShowModal(true)}>Agregar Maestro-Curso</button>
-            </div>
+            <AddButton onClick={() => setShowModal(true)}>Agregar Maestro-Curso</AddButton>
 
-            <table>
+            <StyledTable>
                 <thead>
                     <tr>
-                        <th>Maestro ID</th>
-                        <th>Curso ID</th>
-                        <th>Acciones</th>
+                        <TableHeader>Maestro ID</TableHeader>
+                        <TableHeader>Curso ID</TableHeader>
+                        <TableHeader>Acciones</TableHeader>
                     </tr>
                 </thead>
                 <tbody>
                     {maestroCursos.map(mc => (
-                        <tr key={`${mc.maestro_id}-${mc.curso_id}`}>
-                            <td>{mc.maestro_id}</td>
-                            <td>{mc.curso_id}</td>
-                            <td>
-                                <button onClick={() => handleEdit(mc)}>Editar</button>
-                                <button onClick={() => handleDelete(mc.maestro_id, mc.curso_id)}>Eliminar</button>
-                            </td>
-                        </tr>
+                        <TableRow key={`${mc.maestro_id}-${mc.curso_id}`}>
+                            <TableCell>{mc.maestro_id}</TableCell>
+                            <TableCell>{mc.curso_id}</TableCell>
+                            <TableCell>
+                                <ActionButton variant="edit" onClick={() => handleEdit(mc)}>Editar</ActionButton>
+                                <ActionButton variant="delete" onClick={() => handleDelete(mc.maestro_id, mc.curso_id)}>Eliminar</ActionButton>
+                            </TableCell>
+                        </TableRow>
                     ))}
                 </tbody>
-            </table>
+            </StyledTable>
 
             {showModal && (
-                <div>
-                    <div>
-                        <div>
-                            <h5>{editMode ? 'Editar Maestro-Curso' : 'Agregar Maestro-Curso'}</h5>
-                            <button onClick={handleCloseModal}>Cerrar</button>
-                        </div>
-                        <div>
-                            <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Maestro ID</label>
-                                    <input type="number" name="maestro_id" value={form.maestro_id} onChange={handleChange} required />
-                                </div>
-                                <div>
-                                    <label>Curso ID</label>
-                                    <input type="number" name="curso_id" value={form.curso_id} onChange={handleChange} required />
-                                </div>
-                                <button type="submit" disabled={loading}>
-                                    {editMode ? 'Actualizar Maestro-Curso' : 'Agregar Maestro-Curso'}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                <Modal>
+                    <ModalHeader>
+                        <ModalTitle>{editMode ? 'Editar Maestro-Curso' : 'Agregar Maestro-Curso'}</ModalTitle>
+                        <CloseButton onClick={handleCloseModal}>&times;</CloseButton>
+                    </ModalHeader>
+                    <form onSubmit={handleSubmit}>
+                        <FormGroup>
+                            <Label>Maestro ID</Label>
+                            <Input type="number" name="maestro_id" value={form.maestro_id} onChange={handleChange} required />
+                        </FormGroup>
+                        <FormGroup>
+                            <Label>Curso ID</Label>
+                            <Input type="number" name="curso_id" value={form.curso_id} onChange={handleChange} required />
+                        </FormGroup>
+                        <SubmitButton type="submit" disabled={loading}>
+                            {editMode ? 'Actualizar Maestro-Curso' : 'Agregar Maestro-Curso'}
+                        </SubmitButton>
+                    </form>
+                </Modal>
             )}
 
             <ToastContainer />
-        </div>
+        </TableContainer>
     );
 };
 
-ReactDOM.createRoot(document.getElementById('crud-maestro-cursos')).render(<App />);
+// Montaje manual para pruebas
+window.onload = () => {
+    const rootElement = document.getElementById('crud-maestro-cursos');
+    if (rootElement) {
+        ReactDOM.createRoot(rootElement).render(<App />);
+    } else {
+        console.error("No se encontró el contenedor con id 'crud-maestro-cursos'");
+    }
+};
+
+export default App;
