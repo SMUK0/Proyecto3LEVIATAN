@@ -10,10 +10,17 @@ class Materia extends Model
     use HasFactory;
 
     protected $table = 'materias';
-
     protected $primaryKey = 'materia_id';
 
+    // Campos asignables en masa
     protected $fillable = ['nombre'];
 
-    public $timestamps = false; // Si no tienes columnas created_at y updated_at
+    public $timestamps = false; // Esta tabla no tiene timestamps
+
+    // Relación con cursos y maestros
+    public function cursos()
+    {
+        return $this->belongsToMany(Curso::class, 'maestro_curso', 'materia_id', 'curso_id')
+                    ->withPivot('maestro_id');
+    }
 }

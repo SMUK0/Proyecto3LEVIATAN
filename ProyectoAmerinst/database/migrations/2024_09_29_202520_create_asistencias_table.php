@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('asistencias', function (Blueprint $table) {
             $table->id('asistencia_id');
-            $table->unsignedBigInteger('estudiante_id');  // Debe ser unsignedBigInteger
+            $table->unsignedBigInteger('estudiante_id');
             $table->unsignedBigInteger('curso_id');
 
             $table->foreign('estudiante_id')->references('estudiante_id')->on('estudiantes')->onDelete('cascade');
             $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
-            $table->date('fecha');
             $table->string('estado', 20); // Presente, Ausente, Tarde
             $table->text('observaciones')->nullable();
+            $table->timestamps();  // Añade 'created_at' y 'updated_at'
         });
     }
 

@@ -13,12 +13,11 @@ return new class extends Migration
     {
         Schema::create('notas', function (Blueprint $table) {
             $table->id('nota_id');
-            $table->unsignedBigInteger('estudiante_id');  // Debe ser unsignedBigInteger
+            $table->unsignedBigInteger('estudiante_id');
             $table->unsignedBigInteger('curso_id');
             $table->unsignedBigInteger('materia_id');
             $table->unsignedBigInteger('maestro_id');
         
-
             $table->foreign('estudiante_id')->references('estudiante_id')->on('estudiantes')->onDelete('cascade');
             $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
             $table->foreign('materia_id')->references('materia_id')->on('materias')->onDelete('cascade');

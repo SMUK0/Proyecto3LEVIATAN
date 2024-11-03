@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon, faBars } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom';
+
 
 // Contenedor principal del Navbar
 const NavbarContainer = styled.nav`
@@ -171,7 +173,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
         <Button darkMode={darkMode} primary href="#sign-up">
           Sign Up
         </Button>
-        <Button darkMode={darkMode} href="#sign-in">
+        <Button darkMode={darkMode} href="/login">
           Sign In
         </Button>
       </NavLinks>

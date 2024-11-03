@@ -9,18 +9,17 @@ class Rol extends Model
 {
     use HasFactory;
 
-    // Definir la tabla asociada al modelo (por si el nombre de la tabla no sigue la convención "pluralizada")
     protected $table = 'roles';
+    protected $primaryKey = 'rol_id';
 
-    // Indicar los campos que pueden ser asignados de manera masiva
-    protected $fillable = [
-        'nombre', // Campo de nombre del rol
-    ];
+    // Campos asignables en masa
+    protected $fillable = ['nombre'];
 
-    // Si deseas especificar las relaciones, puedes añadir métodos para relaciones aquí.
-    // Ejemplo: si los roles están relacionados con usuarios
+    public $timestamps = false; // Esta tabla no tiene timestamps
+
+    // Relación con usuarios
     public function usuarios()
     {
-        return $this->hasMany(User::class, 'rol_id');
+        return $this->hasMany(Usuario::class, 'rol_id', 'rol_id');
     }
 }

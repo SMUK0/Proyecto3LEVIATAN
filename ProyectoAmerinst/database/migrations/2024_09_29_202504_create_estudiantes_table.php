@@ -12,15 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('estudiantes', function (Blueprint $table) {
-            $table->engine = 'InnoDB';  // Asegúrate de usar InnoDB
             $table->id('estudiante_id');
             $table->string('nombre', 100);
             $table->string('apellido', 100);
             $table->date('fecha_nacimiento');
             $table->unsignedBigInteger('curso_id');
             $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
+            $table->timestamps();  // Añade 'created_at' y 'updated_at'
         });
-        
     }
 
     /**
@@ -28,11 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        #Schema::dropIfExists('estudiantes');
-        Schema::table('estudiantes', function (Blueprint $table) {
-            // Eliminar la clave foránea y el campo curso_id
-            $table->dropForeign(['curso_id']);
-            $table->dropColumn('curso_id');
-        });
+        Schema::dropIfExists('estudiantes');
     }
 };

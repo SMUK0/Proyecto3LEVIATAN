@@ -16,12 +16,11 @@ return new class extends Migration
             $table->string('nombre', 100);
             $table->string('apellido', 100);
             $table->string('email', 100)->unique();
-            $table->string('password_hash', 255);
-            $table->unsignedBigInteger('rol_id');  // La clave foránea debe coincidir en tipo
+            $table->string('password', 255);  // Cambiado de 'password_hash' a 'password'
+            $table->unsignedBigInteger('rol_id');
             $table->foreign('rol_id')->references('rol_id')->on('roles')->onDelete('cascade');
-            $table->timestamp('fecha_creacion')->useCurrent();
+            $table->timestamps();  // Añade 'created_at' y 'updated_at'
         });
-        
     }
 
     /**

@@ -12,12 +12,20 @@ class Notificacion extends Model
     protected $table = 'notificaciones';
     protected $primaryKey = 'notificacion_id';
 
-    protected $fillable = [
-        'usuario_id',
-        'estudiante_id',
-        'mensaje',
-        'leido'
-    ];
+    // Campos asignables en masa
+    protected $fillable = ['usuario_id', 'estudiante_id', 'mensaje', 'leido'];
 
-    public $timestamps = false;  // Si no tienes columnas created_at y updated_at
+    public $timestamps = true;
+
+    // Relación con usuarios
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id', 'user_id');
+    }
+
+    // Relación con estudiantes
+    public function estudiante()
+    {
+        return $this->belongsTo(Estudiante::class, 'estudiante_id', 'estudiante_id');
+    }
 }

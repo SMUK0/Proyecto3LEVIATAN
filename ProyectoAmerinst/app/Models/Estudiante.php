@@ -9,21 +9,35 @@ class Estudiante extends Model
 {
     use HasFactory;
 
-    // Tabla asociada al modelo
     protected $table = 'estudiantes';
-
-    // Clave primaria
     protected $primaryKey = 'estudiante_id';
 
-    // Desactivar timestamps automáticos
-    public $timestamps = false;
+    // Campos asignables en masa
+    protected $fillable = ['nombre', 'apellido', 'fecha_nacimiento', 'curso_id'];
 
-    // Campos que son asignables masivamente
-    protected $fillable = ['nombre', 'apellido', 'fecha_nacimiento', 'curso_id'];  // Cambiar 'grado' por 'curso_id'
+    public $timestamps = true;
 
-    // Relación con el modelo Curso
+    // Relación con cursos
     public function curso()
     {
-        return $this->belongsTo(Curso::class, 'curso_id');  // Relación belongsTo con el modelo Curso
+        return $this->belongsTo(Curso::class, 'curso_id', 'curso_id');
+    }
+
+    // Relación con asistencias
+    public function asistencias()
+    {
+        return $this->hasMany(Asistencia::class, 'estudiante_id', 'estudiante_id');
+    }
+
+    // Relación con observaciones
+    public function observaciones()
+    {
+        return $this->hasMany(Observacion::class, 'estudiante_id', 'estudiante_id');
+    }
+
+    // Relación con notificaciones
+    public function notificaciones()
+    {
+        return $this->hasMany(Notificacion::class, 'estudiante_id', 'estudiante_id');
     }
 }

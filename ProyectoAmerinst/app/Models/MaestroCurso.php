@@ -3,20 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class MaestroCurso extends Model
+class MaestroCurso extends Pivot
 {
     use HasFactory;
 
     protected $table = 'maestro_curso';
-    protected $primaryKey = ['maestro_id', 'curso_id'];
-    public $incrementing = false;
 
-    protected $fillable = [
-        'maestro_id',
-        'curso_id'
-    ];
+    // Campos asignables en masa
+    protected $fillable = ['maestro_id', 'curso_id'];
 
-    public $timestamps = false;
+    public $timestamps = false; // Esta tabla no tiene timestamps
 }

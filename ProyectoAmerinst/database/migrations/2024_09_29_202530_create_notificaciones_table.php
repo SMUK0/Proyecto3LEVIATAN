@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('notificaciones', function (Blueprint $table) {
             $table->id('notificacion_id');
             $table->unsignedBigInteger('usuario_id');     // Clave foránea de usuarios
-    $table->unsignedBigInteger('estudiante_id');
-
+            $table->unsignedBigInteger('estudiante_id');
+            
             $table->foreign('usuario_id')->references('user_id')->on('usuarios')->onDelete('cascade');
-    $table->foreign('estudiante_id')->references('estudiante_id')->on('estudiantes')->onDelete('cascade');
+            $table->foreign('estudiante_id')->references('estudiante_id')->on('estudiantes')->onDelete('cascade');
             $table->text('mensaje');
-            $table->timestamp('fecha')->useCurrent();
             $table->boolean('leido')->default(false); // Si el padre leyó la notificación
+            $table->timestamps();  // Añade 'created_at' y 'updated_at'
         });
     }
 

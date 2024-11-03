@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-            Schema::create('estudiante_padre', function (Blueprint $table) {
+        Schema::create('estudiante_padre', function (Blueprint $table) {
             $table->unsignedBigInteger('estudiante_id');
             $table->unsignedBigInteger('padre_id');
             
@@ -20,7 +20,7 @@ return new class extends Migration
         
             $table->primary(['estudiante_id', 'padre_id']);  // Combinación de PK
         });
-    }   
+    }
 
     /**
      * Reverse the migrations.

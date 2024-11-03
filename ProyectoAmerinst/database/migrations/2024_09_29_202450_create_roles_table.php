@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -18,13 +17,6 @@ return new class extends Migration
             $table->charset = 'utf8mb4';
             $table->collation = 'utf8mb4_unicode_ci';
         });
-
-        // Insertar roles iniciales
-        DB::table('roles')->insert([
-            ['nombre' => 'Administrador'],
-            ['nombre' => 'Maestro'],
-            ['nombre' => 'Padre']
-        ]);
     }
 
     /**

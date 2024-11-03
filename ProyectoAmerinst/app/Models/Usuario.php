@@ -8,13 +8,25 @@ use Illuminate\Database\Eloquent\Model;
 class Usuario extends Model
 {
     use HasFactory;
+
     protected $table = 'usuarios';
-    
     protected $primaryKey = 'user_id';
 
-    protected $fillable = [
-        'nombre', 'apellido', 'email', 'password_hash', 'rol_id'
-    ];
+    // Campos asignables en masa
+    protected $fillable = ['nombre', 'apellido', 'email', 'password', 'rol_id'];
 
-    public $timestamps = false;  // Si no usas timestamps de Laravel (created_at, updated_at)
+    // Habilitar timestamps automáticos
+    public $timestamps = true;
+
+    // Relación con roles
+    public function rol()
+    {
+        return $this->belongsTo(Rol::class, 'rol_id', 'rol_id');
+    }
+
+    // Relación con estudiantes (para padres o maestros)
+    public function estudiantes()
+    {
+        return $this->hasMany(Estudiante::class, 'user_id', 'user_id');
+    }
 }

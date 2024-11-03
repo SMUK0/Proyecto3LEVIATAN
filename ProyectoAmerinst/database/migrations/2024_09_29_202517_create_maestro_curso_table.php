@@ -12,15 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('maestro_curso', function (Blueprint $table) {
-    $table->unsignedBigInteger('maestro_id');  // La clave foránea debe coincidir en tipo con usuarios.user_id
-    $table->unsignedBigInteger('curso_id');
-    
-    $table->foreign('maestro_id')->references('user_id')->on('usuarios')->onDelete('cascade');
-    $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
+            $table->unsignedBigInteger('maestro_id');
+            $table->unsignedBigInteger('curso_id');
+            
+            $table->foreign('maestro_id')->references('user_id')->on('usuarios')->onDelete('cascade');
+            $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
 
-    $table->primary(['maestro_id', 'curso_id']);
-});
-
+            $table->primary(['maestro_id', 'curso_id']);
+        });
     }
 
     /**

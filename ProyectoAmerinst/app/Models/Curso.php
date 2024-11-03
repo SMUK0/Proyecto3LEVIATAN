@@ -9,21 +9,24 @@ class Curso extends Model
 {
     use HasFactory;
 
-    // Nombre de la tabla
     protected $table = 'cursos';
-
-    // Clave primaria
     protected $primaryKey = 'curso_id';
 
-    // Desactivar timestamps si no usas created_at/updated_at
-    public $timestamps = false;
-
-    // Campos asignables masivamente
+    // Campos asignables en masa
     protected $fillable = ['nombre', 'grado'];
 
-    // Relación con el modelo Estudiante
+    public $timestamps = false; // Esta tabla no tiene timestamps
+
+    // Relación con estudiantes
     public function estudiantes()
     {
-        return $this->hasMany(Estudiante::class, 'curso_id');  // Relación hasMany con el modelo Estudiante
+        return $this->hasMany(Estudiante::class, 'curso_id', 'curso_id');
+    }
+
+    // Relación con materias (a través de maestros)
+    public function materias()
+    {
+        return $this->belongsToMany(Materia::class, 'maestro_curso', 'curso_id', 'materia_id')
+                    ->withPivot('maestro_id');
     }
 }
