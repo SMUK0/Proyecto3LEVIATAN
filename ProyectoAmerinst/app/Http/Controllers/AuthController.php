@@ -2,33 +2,60 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
+    // Método para iniciar sesión
     public function login(Request $request)
     {
-        // Validar los campos de correo y contraseña
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required'
         ]);
 
-        // Buscar al usuario por su email
-        $user = DB::table('usuarios')->where('email', $request->email)->first();
+        // Intentar autenticación
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate(); // Regenerar la sesión
 
-        if (!$user || !Hash::check($request->password, $user->password_hash)) {
-            return response()->json(['error' => 'Credenciales incorrectas'], 401);
+            $user = Auth::user();
+            return response()->json([
+                'user_id' => $user->user_id,
+                'rol_id' => $user->rol_id,
+                'nombre' => $user->nombre,
+                'apellido' => $user->apellido
+            ]);
         }
 
-        // Devolver la respuesta en formato JSON con el nombre, apellido, rol y user_id del usuario
+        return response()->json(['error' => 'Credenciales incorrectas'], 401);
+    }
+
+    // Método para obtener el usuario autenticado
+    public function getUser(Request $request)
+{
+    if (Auth::check()) {
+        $user = Auth::user();
         return response()->json([
-            'user_id' => $user->user_id,  // Asegúrate de que la columna `user_id` exista en la tabla `usuarios`
-            'rol' => $user->rol_id,
+            'user_id' => $user->user_id,
+            'rol_id' => $user->rol_id,
             'nombre' => $user->nombre,
             'apellido' => $user->apellido
         ]);
     }
+
+    return response()->json(['error' => 'Usuario no autenticado'], 401);
 }
 
+
+    // Método para cerrar sesión
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json(['message' => 'Sesión cerrada correctamente']);
+    }
+}

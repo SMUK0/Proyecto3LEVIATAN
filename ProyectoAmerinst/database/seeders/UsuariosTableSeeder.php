@@ -18,7 +18,7 @@ class UsuariosTableSeeder extends Seeder
                 'nombre' => 'Juan',
                 'apellido' => 'Perez',
                 'email' => 'juan.perez@gmail.com',
-                'password' => Hash::make('password123'),  // Cambiado de 'password_hash' a 'password'
+                'password' => Hash::make('pass123'),  // Cambiado de 'password_hash' a 'password'
                 'rol_id' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -27,7 +27,7 @@ class UsuariosTableSeeder extends Seeder
                 'nombre' => 'Maria',
                 'apellido' => 'Garcia',
                 'email' => 'maria.garcia@gmail.com',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('pass123'),
                 'rol_id' => 2,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -36,7 +36,7 @@ class UsuariosTableSeeder extends Seeder
                 'nombre' => 'Carlos',
                 'apellido' => 'Lopez',
                 'email' => 'carlos.lopez@gmail.com',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('pass123'),
                 'rol_id' => 3,
                 'created_at' => now(),
                 'updated_at' => now(),

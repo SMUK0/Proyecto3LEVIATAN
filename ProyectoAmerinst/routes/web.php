@@ -22,17 +22,32 @@ use App\Http\Controllers\EstudiantePadresController;
 |
 */
 /* LOGIN */
+// Definir la ruta de login
 Route::get('/login', function () {
     return view('login');
-});
+})->name('login');
 
-/* Vista Administrador */
-Route::get('/administrador', function () {
-    return view('view_administrador');
-});
-/* Vista Maestro */
-Route::get('/maestro', function () {
-    return view('view_maestro');
+// En web.php
+use App\Http\Controllers\AuthController;
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
+Route::get('/user', [AuthController::class, 'getUser'])->middleware('auth');
+
+
+
+Route::middleware('auth')->group(function () {
+    Route::get('/administrador', function () {
+        return view('view_administrador');
+    });
+    
+    Route::get('/maestro', function () {
+        return view('view_maestro');
+    });
+
+    Route::get('/padre', function () {
+        return view('view_padre');
+    });
 });
 
 /* Usuario */

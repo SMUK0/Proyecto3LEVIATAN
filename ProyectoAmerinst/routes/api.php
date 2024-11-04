@@ -24,9 +24,7 @@ use App\Http\Controllers\EstudiantePadresController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-/* LOGIN */
-Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
-Route::middleware('auth')->get('/login', [AuthController::class, 'getUser']);
+
 
 Route::get('/roles', [RolController::class, 'index']);
 /* Usuario */

@@ -2,39 +2,30 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import AsistenciasApp from './asistenciasapp.jsx';
 import NotasApp from './notasapp.jsx';
-import NotificacionesApp from './notificacionesapp.jsx'; // Importamos NotificacionesApp
+import NotificacionesApp from './notificacionesapp.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faBars, faSignOutAlt, faClipboardCheck, faFileAlt, faBell, faChalkboardTeacher } from '@fortawesome/free-solid-svg-icons';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const ViewMaestro = () => {
     const [activeComponent, setActiveComponent] = useState('');
     const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
-    const [user, setUser] = useState(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
 
-    useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem('user'));
-        if (userData && userData.rol === 2) {
-            setUser(userData);
-        } else {
-            window.location.href = '/login';
-        }
-    }, []);
+    // Alternar el menú
+    const toggleMenu = () => setIsMenuCollapsed(!isMenuCollapsed);
 
-    const toggleMenu = () => {
-        setIsMenuCollapsed(!isMenuCollapsed);
-    };
-
+    // Cerrar sesión y redirigir
     const handleLogout = () => {
         localStorage.removeItem('user');
         window.location.href = '/login';
     };
 
-    const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
-    };
+    // Alternar el menú desplegable del perfil
+    const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
+    // Cerrar el menú desplegable si se hace clic fuera de él
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -42,70 +33,77 @@ const ViewMaestro = () => {
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Renderizar el componente activo seleccionado
     const renderComponent = () => {
-        if (activeComponent === 'asistencias') {
-            return <div id="crud-asistencias"><AsistenciasApp /></div>;
-        } else if (activeComponent === 'notas') {
-            return <div id="crud-notas"><NotasApp /></div>;
-        } else if (activeComponent === 'notificaciones') {
-            return <div id="crud-notificaciones"><NotificacionesApp /></div>;
+        switch (activeComponent) {
+            case 'asistencias':
+                return <AsistenciasApp />;
+            case 'notas':
+                return <NotasApp />;
+            case 'notificaciones':
+                return <NotificacionesApp />;
+            default:
+                return <div className="text-center mt-5">Por favor selecciona una opción del menú</div>;
         }
-        return <div>Por favor selecciona una opción del menú</div>;
     };
 
     return (
-        <div style={{ display: 'flex' }}>
-            <div style={{
-                width: isMenuCollapsed ? '50px' : '250px',
-                backgroundColor: '#f8f9fa',
-                padding: isMenuCollapsed ? '10px' : '20px',
-                transition: 'width 0.3s ease',
-            }}>
-                <button onClick={toggleMenu}>
-                    {isMenuCollapsed ? '►' : '◄'}
-                </button>
+        <div className="d-flex">
+            {/* Menú lateral */}
+            <div className={`bg-primary text-white p-3 ${isMenuCollapsed ? 'collapsed-menu' : 'expanded-menu'}`} style={{ height: '100vh', transition: 'width 0.3s' }}>
+                <div className="text-center mb-3">
+                    <button className="btn btn-outline-light" onClick={toggleMenu}>
+                        <FontAwesomeIcon icon={faBars} />
+                    </button>
+                </div>
                 {!isMenuCollapsed && (
-                    <div>
-                        <h2>Menú</h2>
-                        <ul style={{ listStyleType: 'none', padding: 0 }}>
-                            <li>
-                                <button onClick={() => setActiveComponent('asistencias')}>
-                                    Asistencias
-                                </button>
-                            </li>
-                            <li>
-                                <button onClick={() => setActiveComponent('notas')}>
-                                    Notas
-                                </button>
-                            </li>
-                            <li>
-                                <button onClick={() => setActiveComponent('notificaciones')}>
-                                    Notificaciones
-                                </button>
-                            </li>
+                    <div className="menu-options">
+                        <h5 className="text-center mb-4">Menú Maestro</h5>
+                        <ul className="nav flex-column">
+                            {[{ label: 'Asistencias', value: 'asistencias', icon: faClipboardCheck },
+                              { label: 'Notas', value: 'notas', icon: faFileAlt },
+                              { label: 'Notificaciones', value: 'notificaciones', icon: faBell }
+                            ].map((item) => (
+                                <li key={item.value} className="nav-item mb-2">
+                                    <button className="btn btn-outline-light w-100 d-flex align-items-center" onClick={() => setActiveComponent(item.value)}>
+                                        <FontAwesomeIcon icon={item.icon} className="me-2" />
+                                        {item.label}
+                                    </button>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 )}
             </div>
 
-            <div style={{ flex: 1, padding: '20px' }}>
-                {renderComponent()}
-            </div>
-
-            <div ref={dropdownRef}>
-                <FontAwesomeIcon icon={faUser} size="2x" onClick={toggleDropdown} />
-                {isDropdownOpen && (
-                    <div>
-                        <p>Usuario: {user?.nombre} {user?.apellido}</p>
-                        <p>Rol: {user?.rol === 2 ? 'Maestro' : user?.rol}</p>
-                        <button onClick={handleLogout}>Cerrar Sesión</button>
+            {/* Contenido dinámico */}
+            <div className="flex-grow-1">
+                <header className="navbar navbar-expand-lg navbar-light bg-light shadow-sm px-3">
+                    <div className="container-fluid">
+                        <span className="navbar-brand">
+                            <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
+                            Panel Maestro
+                        </span>
+                        <div ref={dropdownRef} className="ml-auto d-flex align-items-center">
+                            <FontAwesomeIcon icon={faUser} size="lg" className="me-2" onClick={toggleDropdown} />
+                            {isDropdownOpen && (
+                                <div className="dropdown-menu dropdown-menu-right show position-absolute" style={{ top: '40px', right: '10px' }}>
+                                    <button className="dropdown-item text-danger" onClick={handleLogout}>
+                                        <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />Cerrar Sesión
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                )}
+                </header>
+
+                {/* Renderización del componente seleccionado */}
+                <div className="p-4">
+                    {renderComponent()}
+                </div>
             </div>
         </div>
     );

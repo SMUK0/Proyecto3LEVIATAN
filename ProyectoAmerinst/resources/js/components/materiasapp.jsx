@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const MateriasApp = () => {
     const [materias, setMaterias] = useState([]);
-    const [form, setForm] = useState({
-        nombre: ''
-    });
+    const [form, setForm] = useState({ nombre: '' });
+    const [errors, setErrors] = useState({});
     const [editMode, setEditMode] = useState(false);
     const [editId, setEditId] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -15,68 +16,67 @@ const MateriasApp = () => {
 
     useEffect(() => {
         fetch('/api/materias')
-            .then(response => response.json())
+            .then(response => response.ok ? response.json() : Promise.reject('Error al cargar materias'))
             .then(data => setMaterias(data))
             .catch(() => toast.error("Error al cargar materias"));
     }, []);
 
+    const validateForm = () => {
+        const newErrors = {};
+        if (!form.nombre.trim()) newErrors.nombre = 'El nombre de la materia es obligatorio';
+        else if (form.nombre.length > 100) newErrors.nombre = 'El nombre de la materia no debe exceder los 100 caracteres';
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        });
+        setForm({ ...form, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!validateForm()) {
+            toast.error("Por favor corrige los errores en el formulario");
+            return;
+        }
         setLoading(true);
-
         const method = editMode ? 'PUT' : 'POST';
         const url = editMode ? `/api/materias/${editId}` : '/api/materias';
 
         fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            method,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(form)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (editMode) {
-                setMaterias(materias.map(materia => materia.materia_id === editId ? data : materia));
-                toast.success("Materia actualizada exitosamente");
-            } else {
-                setMaterias([...materias, data]);
-                toast.success("Materia agregada exitosamente");
-            }
-            setShowModal(false);
-            setForm({ nombre: '' });   // Reiniciar formulario
-            setEditMode(false);         // Reiniciar modo de edición
-            setEditId(null);            // Reiniciar ID de edición
-        })
-        .catch(() => {
-            toast.error("Error al crear o actualizar la materia");
-        })
-        .finally(() => setLoading(false));
+            .then(response => response.ok ? response.json() : Promise.reject('Error al guardar la materia'))
+            .then(data => {
+                if (editMode) {
+                    setMaterias(materias.map(materia => materia.materia_id === editId ? data : materia));
+                    toast.success("Materia actualizada exitosamente");
+                } else {
+                    setMaterias([...materias, data]);
+                    toast.success("Materia agregada exitosamente");
+                }
+                handleCloseModal();
+            })
+            .catch(() => toast.error("Error al crear o actualizar la materia"))
+            .finally(() => setLoading(false));
     };
 
-    // Abrir el modal para agregar una nueva materia
     const handleShowAddForm = () => {
-        setForm({ nombre: '' });        // Reiniciar formulario
-        setEditMode(false);             // Reiniciar modo de edición
-        setEditId(null);                // Reiniciar ID de edición
-        setShowModal(true);             // Mostrar el modal
+        setForm({ nombre: '' });
+        setEditMode(false);
+        setEditId(null);
+        setErrors({});
+        setShowModal(true);
     };
 
-    // Abrir el modal para editar una materia existente
     const handleEdit = (materia) => {
-        setForm({
-            nombre: materia.nombre
-        });
+        setForm({ nombre: materia.nombre });
         setEditId(materia.materia_id);
         setEditMode(true);
-        setShowModal(true);             // Mostrar el modal en modo edición
+        setErrors({});
+        setShowModal(true);
     };
 
     const handleDelete = (id) => {
@@ -91,39 +91,37 @@ const MateriasApp = () => {
             if (result.isConfirmed) {
                 setLoading(true);
                 fetch(`/api/materias/${id}`, { method: 'DELETE' })
-                .then(() => {
-                    setMaterias(materias.filter(materia => materia.materia_id !== id));
-                    toast.success("Materia eliminada exitosamente");
-                    Swal.fire('Eliminado!', 'La materia ha sido eliminada.', 'success');
-                })
-                .catch(() => {
-                    toast.error("Error al eliminar la materia");
-                })
-                .finally(() => setLoading(false));
+                    .then(() => {
+                        setMaterias(materias.filter(materia => materia.materia_id !== id));
+                        toast.success("Materia eliminada exitosamente");
+                        Swal.fire('Eliminado!', 'La materia ha sido eliminada.', 'success');
+                    })
+                    .catch(() => toast.error("Error al eliminar la materia"))
+                    .finally(() => setLoading(false));
             }
         });
     };
 
-    // Cerrar el modal y reiniciar el formulario
     const handleCloseModal = () => {
         setShowModal(false);
-        setForm({ nombre: '' });        // Reiniciar formulario al cerrar
-        setEditMode(false);             // Reiniciar modo de edición
-        setEditId(null);                // Limpiar el ID de edición
+        setForm({ nombre: '' });
+        setEditMode(false);
+        setEditId(null);
+        setErrors({});
     };
 
     return (
-        <div>
-            {loading && <div>Cargando...</div>}
+        <div className="container my-4">
 
-            <div>
-                <button onClick={handleShowAddForm}>Agregar Materia</button>
-            </div>
+            <button className="btn btn-primary mb-3" onClick={handleShowAddForm}>
+                Agregar Materia
+            </button>
 
-            <table>
-                <thead>
+            {loading && <div className="alert alert-info">Cargando...</div>}
+
+            <table className="table table-hover table-bordered">
+                <thead className="table-dark">
                     <tr>
-                        {/* Eliminar la columna de ID */}
                         <th>Nombre</th>
                         <th>Acciones</th>
                     </tr>
@@ -133,8 +131,12 @@ const MateriasApp = () => {
                         <tr key={materia.materia_id}>
                             <td>{materia.nombre}</td>
                             <td>
-                                <button onClick={() => handleEdit(materia)}>Editar</button>
-                                <button onClick={() => handleDelete(materia.materia_id)}>Eliminar</button>
+                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(materia)}>
+                                    Editar
+                                </button>
+                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(materia.materia_id)}>
+                                    Eliminar
+                                </button>
                             </td>
                         </tr>
                     ))}
@@ -142,21 +144,36 @@ const MateriasApp = () => {
             </table>
 
             {showModal && (
-                <div>
-                    <div>
-                        <div>
-                            <h5>{editMode ? 'Editar Materia' : 'Agregar Materia'}</h5>
-                            <button onClick={handleCloseModal}>Cerrar</button>
-                        </div>
-                        <div>
+                <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">{editMode ? 'Editar Materia' : 'Agregar Materia'}</h5>
+                                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+                            </div>
                             <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Nombre</label>
-                                    <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+                                <div className="modal-body">
+                                    <div className="mb-3">
+                                        <label className="form-label">Nombre</label>
+                                        <input
+                                            type="text"
+                                            name="nombre"
+                                            className="form-control"
+                                            value={form.nombre}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        {errors.nombre && <div className="text-danger">{errors.nombre}</div>}
+                                    </div>
                                 </div>
-                                <button type="submit" disabled={loading}>
-                                    {editMode ? 'Actualizar Materia' : 'Agregar Materia'}
-                                </button>
+                                <div className="modal-footer">
+                                    <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
+                                        Cerrar
+                                    </button>
+                                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                                        {editMode ? 'Actualizar Materia' : 'Agregar Materia'}
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div>

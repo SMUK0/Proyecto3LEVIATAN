@@ -12,14 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('maestro_curso', function (Blueprint $table) {
+            $table->id();  // Clave primaria autoincremental
             $table->unsignedBigInteger('maestro_id');
             $table->unsignedBigInteger('curso_id');
             
+            // Claves foráneas
             $table->foreign('maestro_id')->references('user_id')->on('usuarios')->onDelete('cascade');
             $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
-
-            $table->primary(['maestro_id', 'curso_id']);
+        
+            // Definir un índice único en la combinación
+            $table->unique(['maestro_id', 'curso_id']);
         });
+        
+
     }
 
     /**

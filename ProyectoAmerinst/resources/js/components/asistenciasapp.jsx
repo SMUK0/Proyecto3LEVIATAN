@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import Swal from 'sweetalert2';
 import { ToastContainer, toast } from 'react-toastify';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AsistenciasApp = () => {
     const [asistencias, setAsistencias] = useState([]);
@@ -18,11 +20,6 @@ const AsistenciasApp = () => {
     const [editId, setEditId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
-
-    const getCsrfToken = () => {
-        const token = document.querySelector('meta[name="csrf-token"]');
-        return token ? token.getAttribute('content') : '';
-    };
 
     useEffect(() => {
         fetch('/api/asistencias')
@@ -46,15 +43,11 @@ const AsistenciasApp = () => {
 
         if (name === "estudiante_id") {
             const estudianteSeleccionado = estudiantes.find(est => est.estudiante_id === parseInt(value));
-            if (estudianteSeleccionado) {
-                setForm({
-                    ...form,
-                    [name]: value,
-                    curso_id: estudianteSeleccionado.curso_id
-                });
-            } else {
-                setForm({ ...form, [name]: value, curso_id: '' });
-            }
+            setForm({
+                ...form,
+                [name]: value,
+                curso_id: estudianteSeleccionado ? estudianteSeleccionado.curso_id : ''
+            });
         } else {
             setForm({ ...form, [name]: value });
         }
@@ -68,26 +61,14 @@ const AsistenciasApp = () => {
         const url = editMode ? `/api/asistencias/${editId}` : '/api/asistencias';
 
         fetch(url, {
-            method: method,
+            method,
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken()
             },
             body: JSON.stringify(form)
         })
             .then(async (response) => {
-                console.log("Respuesta del servidor completa:", response);
-
-                if (!response.ok) {
-                    const text = await response.text();
-                    if (text.startsWith('<!DOCTYPE html>')) {
-                        console.error("Se recibió HTML en lugar de JSON.");
-                        throw new Error("Error inesperado: El servidor devolvió HTML en lugar de JSON.");
-                    }
-                    console.error("Respuesta no válida, cuerpo del servidor:", text);
-                    throw new Error(text);
-                }
-
+                if (!response.ok) throw new Error(await response.text());
                 return response.json();
             })
             .then(data => {
@@ -98,17 +79,11 @@ const AsistenciasApp = () => {
                     setAsistencias([...asistencias, data]);
                     toast.success("Asistencia agregada exitosamente");
                 }
-                setShowModal(false);
-                setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: 'Presente', observaciones: '' });
-                setEditMode(false);
+                handleCloseModal();
             })
-            .catch((error) => {
-                console.error("Error al crear o actualizar la asistencia:", error);
-                toast.error("Error al crear o actualizar la asistencia: " + error.message);
-            })
+            .catch(error => toast.error("Error al crear o actualizar la asistencia"))
             .finally(() => setLoading(false));
     };
-
 
     const handleEdit = (asistencia) => {
         setForm({
@@ -134,13 +109,12 @@ const AsistenciasApp = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 setLoading(true);
-                fetch(`/api/asistencias/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': getCsrfToken() } })
+                fetch(`/api/asistencias/${id}`, { method: 'DELETE' })
                     .then(() => {
                         setAsistencias(asistencias.filter(asistencia => asistencia.asistencia_id !== id));
                         toast.success("Asistencia eliminada exitosamente");
-                        Swal.fire('Eliminado!', 'La asistencia ha sido eliminada.', 'success');
                     })
-                    .catch(() => toast.error("Ocurrió un problema al eliminar la asistencia."))
+                    .catch(() => toast.error("Ocurrió un problema al eliminar la asistencia"))
                     .finally(() => setLoading(false));
             }
         });
@@ -163,19 +137,13 @@ const AsistenciasApp = () => {
     };
 
     return (
-        <div>
-            {loading && <div>Cargando...</div>}
+        <div className="container">
+            <button className="btn btn-primary mt-4 mb-4" onClick={() => setShowModal(true)}>Agregar Asistencia</button>
 
-            <div>
-                <button onClick={() => {
-                    setShowModal(true);
-                    setEditMode(false);
-                    setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: 'Presente', observaciones: '' });
-                }}>Agregar Asistencia</button>
-            </div>
+            {loading && <div className="alert alert-info">Cargando...</div>}
 
-            <table>
-                <thead>
+            <table className="table table-hover table-bordered">
+                <thead className="table-dark">
                     <tr>
                         <th>ID</th>
                         <th>Estudiante</th>
@@ -194,8 +162,8 @@ const AsistenciasApp = () => {
                             <td>{asistencia.fecha}</td>
                             <td>{asistencia.estado}</td>
                             <td>
-                                <button onClick={() => handleEdit(asistencia)}>Editar</button>
-                                <button onClick={() => handleDelete(asistencia.asistencia_id)}>Eliminar</button>
+                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(asistencia)}>Editar</button>
+                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(asistencia.asistencia_id)}>Eliminar</button>
                             </td>
                         </tr>
                     ))}
@@ -203,53 +171,53 @@ const AsistenciasApp = () => {
             </table>
 
             {showModal && (
-                <div>
-                    <div>
-                        <div>
-                            <h5>{editMode ? 'Editar Asistencia' : 'Agregar Asistencia'}</h5>
-                            <button onClick={handleCloseModal}>Cerrar</button>
-                        </div>
-                        <div>
+                <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">{editMode ? 'Editar Asistencia' : 'Agregar Asistencia'}</h5>
+                                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+                            </div>
                             <form onSubmit={handleSubmit}>
-                                <div>
-                                    <label>Estudiante</label>
-                                    <select name="estudiante_id" value={form.estudiante_id} onChange={handleChange} required>
-                                        <option value="">Seleccione un estudiante</option>
-                                        {estudiantes.map(estudiante => (
-                                            <option key={estudiante.estudiante_id} value={estudiante.estudiante_id}>
-                                                {estudiante.nombre} {estudiante.apellido}
-                                            </option>
-                                        ))}
-                                    </select>
+                                <div className="modal-body">
+                                    <div className="mb-3">
+                                        <label className="form-label">Estudiante</label>
+                                        <select name="estudiante_id" className="form-select" value={form.estudiante_id} onChange={handleChange} required>
+                                            <option value="">Seleccione un estudiante</option>
+                                            {estudiantes.map(estudiante => (
+                                                <option key={estudiante.estudiante_id} value={estudiante.estudiante_id}>
+                                                    {estudiante.nombre} {estudiante.apellido}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Curso</label>
+                                        <input type="text" className="form-control" value={getCursoNombre(form.curso_id)} readOnly />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Fecha</label>
+                                        <input type="date" name="fecha" className="form-control" value={form.fecha} onChange={handleChange} />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Estado</label>
+                                        <select name="estado" className="form-select" value={form.estado} onChange={handleChange} required>
+                                            <option value="Presente">Presente</option>
+                                            <option value="Ausente">Ausente</option>
+                                            <option value="Tarde">Tarde</option>
+                                        </select>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label">Observaciones</label>
+                                        <textarea name="observaciones" className="form-control" value={form.observaciones} onChange={handleChange}></textarea>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label>Curso</label>
-                                    <input
-                                        type="text"
-                                        name="curso"
-                                        value={getCursoNombre(form.curso_id)}
-                                        readOnly
-                                    />
+                                <div className="modal-footer">
+                                    <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Cerrar</button>
+                                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                                        {editMode ? 'Actualizar Asistencia' : 'Agregar Asistencia'}
+                                    </button>
                                 </div>
-                                <div>
-                                    <label>Fecha</label>
-                                    <input type="date" name="fecha" value={form.fecha} readOnly />
-                                </div>
-                                <div>
-                                    <label>Estado</label>
-                                    <select name="estado" value={form.estado} onChange={handleChange} required>
-                                        <option value="Presente">Presente</option>
-                                        <option value="Ausente">Ausente</option>
-                                        <option value="Tarde">Tarde</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Observaciones</label>
-                                    <textarea name="observaciones" value={form.observaciones} onChange={handleChange}></textarea>
-                                </div>
-                                <button type="submit" disabled={loading}>
-                                    {editMode ? 'Actualizar Asistencia' : 'Agregar Asistencia'}
-                                </button>
                             </form>
                         </div>
                     </div>
@@ -261,7 +229,6 @@ const AsistenciasApp = () => {
     );
 };
 
-// Monta el componente en el div con id="crud-asistencias"
 window.onload = () => {
     const rootElement = document.getElementById('crud-asistencias');
     if (rootElement) {

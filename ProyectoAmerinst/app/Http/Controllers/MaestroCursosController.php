@@ -8,73 +8,99 @@ use Illuminate\Support\Facades\Log;
 
 class MaestroCursosController extends Controller
 {
-    // Obtener todas las relaciones maestro-curso
     public function apiIndex()
     {
-        $maestroCursos = MaestroCurso::all();
-        return response()->json($maestroCursos, 200);
-    }
-
-     // Método para devolver la vista HTML
-     public function index()
-     {
-         $maestroCursos = MaestroCurso::all();
-         return view('maestrocursos', compact('maestroCursos'));
-     }
-
-    // Crear una nueva relación maestro-curso
-    public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'maestro_id' => 'required|exists:usuarios,user_id',
-            'curso_id' => 'required|exists:cursos,curso_id',
-        ]);
-
         try {
-            $maestroCurso = MaestroCurso::create($validatedData);
-            return response()->json($maestroCurso, 201);
+            $maestroCursos = MaestroCurso::all();
+            return response()->json($maestroCursos, 200);
         } catch (\Exception $e) {
-            Log::error('Error al crear maestro-curso: ' . $e->getMessage());
-            return response()->json(['message' => 'Error interno al crear maestro-curso'], 500);
+            Log::error("Error al obtener maestro-cursos: " . $e->getMessage());
+            return response()->json(['message' => 'Error interno al obtener maestro-cursos'], 500);
         }
     }
 
-    // Obtener una relación maestro-curso por ID
-    public function show($id)
-    {
-        $maestroCurso = MaestroCurso::find($id);
-        if (!$maestroCurso) {
-            return response()->json(['message' => 'Relación Maestro-Curso no encontrada'], 404);
-        }
-        return response()->json($maestroCurso);
-    }
-
-    // Actualizar maestro-curso
-public function update(Request $request, $maestro_id, $curso_id)
+    public function index()
 {
-    $maestroCurso = MaestroCurso::where('maestro_id', $maestro_id)->where('curso_id', $curso_id)->first();
-    if (!$maestroCurso) {
-        return response()->json(['message' => 'Relación Maestro-Curso no encontrada'], 404);
-    }
+    return view('maestrocursos'); // Asegúrate de que la vista `maestrocursos.blade.php` existe en la carpeta `resources/views`
+}
 
+
+public function store(Request $request)
+{
     $validatedData = $request->validate([
         'maestro_id' => 'required|exists:usuarios,user_id',
         'curso_id' => 'required|exists:cursos,curso_id',
     ]);
 
-    $maestroCurso->update($validatedData);
-    return response()->json($maestroCurso);
+    // Verificar si ya existe la relación
+    $exists = MaestroCurso::where('maestro_id', $validatedData['maestro_id'])
+        ->where('curso_id', $validatedData['curso_id'])
+        ->exists();
+
+    if ($exists) {
+        return response()->json(['message' => 'Esta relación ya existe'], 409);
+    }
+
+    try {
+        $maestroCurso = MaestroCurso::create($validatedData);
+        return response()->json($maestroCurso, 201);
+    } catch (\Exception $e) {
+        Log::error('Error al crear maestro-curso: ' . $e->getMessage());
+        return response()->json(['message' => 'Error interno al crear maestro-curso'], 500);
+    }
 }
 
-// Eliminar maestro-curso
-public function destroy($maestro_id, $curso_id)
+
+
+public function update(Request $request, $maestro_id, $curso_id)
 {
-    $maestroCurso = MaestroCurso::where('maestro_id', $maestro_id)->where('curso_id', $curso_id)->first();
+    // Encontrar el registro maestro-curso con los identificadores proporcionados
+    $maestroCurso = MaestroCurso::where('maestro_id', $maestro_id)
+                                ->where('curso_id', $curso_id)
+                                ->first();
+
     if (!$maestroCurso) {
         return response()->json(['message' => 'Relación Maestro-Curso no encontrada'], 404);
     }
 
-    $maestroCurso->delete();
-    return response()->json(['message' => 'Maestro-Curso eliminado']);
+    // Validar la entrada del formulario
+    $validatedData = $request->validate([
+        'maestro_id' => 'required|exists:usuarios,user_id',
+        'curso_id' => 'required|exists:cursos,curso_id',
+    ]);
+
+    // Actualizar el registro
+    $maestroCurso->update($validatedData);
+    return response()->json($maestroCurso, 200);
 }
+
+
+
+
+
+    public function destroy($maestro_id, $curso_id)
+    {
+        Log::info("Intentando eliminar maestro-curso con maestro_id={$maestro_id} y curso_id={$curso_id}");
+    
+        try {
+            // Verificar y eliminar la relación usando ambos campos como filtros
+            $deleted = MaestroCurso::where('maestro_id', $maestro_id)
+                                   ->where('curso_id', $curso_id)
+                                   ->delete();
+    
+            if ($deleted) {
+                Log::info("Relación Maestro-Curso eliminada correctamente: maestro_id={$maestro_id}, curso_id={$curso_id}");
+                return response()->json(['message' => 'Maestro-Curso eliminado'], 200);
+            } else {
+                Log::warning("Relación Maestro-Curso no encontrada: maestro_id={$maestro_id}, curso_id={$curso_id}");
+                return response()->json(['message' => 'Relación Maestro-Curso no encontrada'], 404);
+            }
+        } catch (\Exception $e) {
+            Log::error("Error al eliminar maestro-curso: " . $e->getMessage());
+            return response()->json(['message' => 'Error interno al eliminar maestro-curso'], 500);
+        }
+    }
+    
+
+
 }

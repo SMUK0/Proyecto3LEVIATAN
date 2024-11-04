@@ -1,62 +1,70 @@
+// Login.jsx
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Para las notificaciones
+import 'react-toastify/dist/ReactToastify.css';
 
 const Login = () => {
     const [form, setForm] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
 
+    // Obtener el token CSRF
     const getCsrfToken = () => {
         const token = document.querySelector('meta[name="csrf-token"]');
         return token ? token.getAttribute('content') : '';
     };
 
+    // Manejar cambios en el formulario
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
+    // Manejo de envío de formulario
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError('');
 
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': getCsrfToken()
                 },
+                credentials: 'include', // Asegura el envío de cookies
                 body: JSON.stringify(form),
             });
 
             if (!response.ok) {
-                throw new Error('Credenciales incorrectas');
+                if (response.status === 401) {
+                    throw new Error('Credenciales incorrectas');
+                } else {
+                    throw new Error('Error al iniciar sesión');
+                }
             }
 
             const data = await response.json();
-
-            // Mostrar logs del usuario
-            console.log(`Usuario: ${data.nombre} ${data.apellido}`);
-            console.log(`Rol: ${data.rol === 1 ? 'Administrador' : data.rol === 2 ? 'Maestro' : 'Padre'}`);
 
             // Guardar los datos del usuario en localStorage
             localStorage.setItem('user', JSON.stringify(data));
 
             // Redirigir según el rol
-            if (data.rol === 1) {
-                window.location.href = '/administrador';
-            } else if (data.rol === 2) {
-                window.location.href = '/maestro'; // Redirección para el rol de maestro
-            } else if (data.rol === 3) {
-                window.location.href = '/padre';
+            switch (data.rol_id) {
+                case 1:
+                    window.location.href = '/administrador';
+                    break;
+                case 2:
+                    window.location.href = '/maestro';
+                    break;
+                case 3:
+                    window.location.href = '/padre';
+                    break;
+                default:
+                    throw new Error('Rol desconocido');
             }
 
             toast.success('Inicio de sesión exitoso!');
         } catch (err) {
-            setError(err.message);
             toast.error(err.message);
         } finally {
             setLoading(false);
@@ -64,12 +72,11 @@ const Login = () => {
     };
 
     return (
-        <div>
-            <h2>Iniciar Sesión</h2>
-            {error && <p>{error}</p>}
+        <div style={styles.container}>
+            <h2 style={styles.welcomeText}>Bienvenido a la Unidad Educativa</h2>
             <form onSubmit={handleSubmit}>
-                <div>
-                    <label htmlFor="email">Correo electrónico:</label>
+                <div style={styles.formGroup}>
+                    <label htmlFor="email" style={styles.label}>Correo electrónico:</label>
                     <input
                         type="email"
                         id="email"
@@ -77,10 +84,11 @@ const Login = () => {
                         value={form.email}
                         onChange={handleChange}
                         required
+                        style={styles.input}
                     />
                 </div>
-                <div>
-                    <label htmlFor="password">Contraseña:</label>
+                <div style={styles.formGroup}>
+                    <label htmlFor="password" style={styles.label}>Contraseña:</label>
                     <input
                         type="password"
                         id="password"
@@ -88,15 +96,88 @@ const Login = () => {
                         value={form.password}
                         onChange={handleChange}
                         required
+                        style={styles.input}
                     />
                 </div>
-                <button type="submit" disabled={loading}>
+                <button type="submit" style={styles.loginButton} disabled={loading}>
                     {loading ? 'Cargando...' : 'Iniciar Sesión'}
                 </button>
             </form>
+            <button 
+                onClick={() => window.location.href = '/'}
+                style={styles.homeButton}
+            >
+                Regresar a Inicio
+            </button>
             <ToastContainer />
         </div>
     );
+};
+
+// Estilos en línea
+const styles = {
+    container: {
+        maxWidth: '380px',
+        padding: '25px',
+        background: '#ffffff',
+        borderRadius: '12px',
+        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
+        textAlign: 'center',
+        fontFamily: 'Arial, sans-serif',
+        margin: 'auto',
+        marginTop: '10vh'
+    },
+    welcomeText: {
+        fontFamily: 'Georgia, serif',
+        color: '#333',
+        fontSize: '24px',
+        marginBottom: '20px'
+    },
+    formGroup: {
+        marginBottom: '15px',
+        textAlign: 'left'
+    },
+    label: {
+        display: 'block',
+        fontWeight: 'bold',
+        marginBottom: '5px',
+        color: '#555'
+    },
+    input: {
+        width: '100%',
+        padding: '12px',
+        marginTop: '5px',
+        borderRadius: '6px',
+        border: '1px solid #ddd',
+        boxSizing: 'border-box',
+        fontSize: '16px',
+    },
+    loginButton: {
+        width: '100%',
+        padding: '12px',
+        backgroundColor: '#5cb85c',
+        color: 'white',
+        fontSize: '16px',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        marginTop: '15px',
+        fontWeight: 'bold',
+        transition: 'background-color 0.3s',
+    },
+    homeButton: {
+        width: '100%',
+        padding: '10px',
+        backgroundColor: '#007bff',
+        color: 'white',
+        fontSize: '16px',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        marginTop: '10px',
+        fontWeight: 'bold',
+        transition: 'background-color 0.3s',
+    }
 };
 
 // Monta el componente en el div con id="login"
