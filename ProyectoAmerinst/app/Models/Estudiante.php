@@ -19,9 +19,10 @@ class Estudiante extends Model
 
     // Relación con cursos
     public function curso()
-    {
-        return $this->belongsTo(Curso::class, 'curso_id', 'curso_id');
-    }
+{
+    return $this->belongsTo(Curso::class, 'curso_id', 'curso_id');
+}
+
 
     // Relación con asistencias
     public function asistencias()

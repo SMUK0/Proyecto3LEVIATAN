@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
     const [notificaciones, setNotificaciones] = useState([]);
+    const [estudiantes, setEstudiantes] = useState([]); // Estado para almacenar todos los estudiantes sin filtrar
     const [form, setForm] = useState({
         usuario_id: '',
         estudiante_id: '',
@@ -20,11 +21,44 @@ const App = () => {
 
     useEffect(() => {
         setLoading(true);
-        fetch('/api/notificaciones')
-            .then(response => response.json())
-            .then(data => setNotificaciones(data))
-            .catch(() => toast.error("Error al cargar notificaciones"))
-            .finally(() => setLoading(false));
+
+        // Obtener el usuario logueado de localStorage
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user && user.user_id) {
+            const { user_id } = user;
+
+            // Establecer usuario_id en el formulario
+            setForm(prevForm => ({
+                ...prevForm,
+                usuario_id: user_id
+            }));
+
+            // Cargar notificaciones filtradas por usuario_id
+            fetch(`/api/notificaciones?usuario_id=${user_id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Error al cargar notificaciones");
+                    }
+                    return response.json();
+                })
+                .then(data => setNotificaciones(data))
+                .catch(error => toast.error(error.message))
+                .finally(() => setLoading(false));
+
+            // Cargar todos los estudiantes sin filtrar
+            fetch('/api/estudiantes')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Error al cargar estudiantes");
+                    }
+                    return response.json();
+                })
+                .then(data => setEstudiantes(data))
+                .catch(error => toast.error(error.message));
+        } else {
+            setLoading(false);
+            toast.error("Usuario no encontrado");
+        }
     }, []);
 
     const getCsrfToken = () => {
@@ -34,7 +68,7 @@ const App = () => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setForm((prevForm) => ({
+        setForm(prevForm => ({
             ...prevForm,
             [name]: type === 'checkbox' ? checked : value
         }));
@@ -56,8 +90,7 @@ const App = () => {
                 },
                 body: JSON.stringify({
                     ...form,
-                    usuario_id: parseInt(form.usuario_id, 10),
-                    estudiante_id: parseInt(form.estudiante_id, 10),
+                    estudiante_id: parseInt(form.estudiante_id, 10)
                 }),
             });
 
@@ -66,6 +99,7 @@ const App = () => {
                 throw new Error(responseData.message || 'Error en la solicitud al servidor');
             }
 
+            // Actualizar la lista de notificaciones
             if (editMode) {
                 setNotificaciones(notificaciones.map(notif => notif.notificacion_id === editId ? responseData : notif));
                 toast.success("Notificación actualizada exitosamente");
@@ -83,7 +117,7 @@ const App = () => {
 
     const handleEdit = (notificacion) => {
         setForm({
-            usuario_id: String(notificacion.usuario_id),
+            usuario_id: form.usuario_id,
             estudiante_id: String(notificacion.estudiante_id),
             mensaje: notificacion.mensaje,
             leido: notificacion.leido
@@ -117,14 +151,13 @@ const App = () => {
 
     const handleCloseModal = () => {
         setShowModal(false);
-        setForm({ usuario_id: '', estudiante_id: '', mensaje: '', leido: false });
+        setForm({ usuario_id: form.usuario_id, estudiante_id: '', mensaje: '', leido: false });
         setEditMode(false);
         setEditId(null);
     };
 
     return (
         <div className="container">
-
             <button className="btn btn-primary mb-3" onClick={() => setShowModal(true)}>Agregar Notificación</button>
 
             {loading && <div className="alert alert-info">Cargando...</div>}
@@ -133,8 +166,8 @@ const App = () => {
                 <thead className="table-dark">
                     <tr>
                         <th>ID</th>
-                        <th>Usuario ID</th>
-                        <th>Estudiante ID</th>
+                        <th>Usuario</th>
+                        <th>Estudiante</th>
                         <th>Mensaje</th>
                         <th>Leído</th>
                         <th>Fecha</th>
@@ -145,8 +178,8 @@ const App = () => {
                     {notificaciones.map(notif => (
                         <tr key={`notif-${notif.notificacion_id}`}>
                             <td>{notif.notificacion_id}</td>
-                            <td>{notif.usuario_id}</td>
-                            <td>{notif.estudiante_id}</td>
+                            <td>{notif.usuario_nombre}</td>
+                            <td>{notif.estudiante_nombre}</td>
                             <td>{notif.mensaje}</td>
                             <td>{notif.leido ? 'Sí' : 'No'}</td>
                             <td>{notif.fecha}</td>
@@ -170,12 +203,21 @@ const App = () => {
                             <form onSubmit={handleSubmit}>
                                 <div className="modal-body">
                                     <div className="mb-3">
-                                        <label className="form-label">Usuario ID</label>
-                                        <input type="number" name="usuario_id" className="form-control" value={form.usuario_id} onChange={handleChange} required />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Estudiante ID</label>
-                                        <input type="number" name="estudiante_id" className="form-control" value={form.estudiante_id} onChange={handleChange} required />
+                                        <label className="form-label">Estudiante</label>
+                                        <select 
+                                            name="estudiante_id" 
+                                            className="form-select" 
+                                            value={form.estudiante_id} 
+                                            onChange={handleChange} 
+                                            required
+                                        >
+                                            <option value="">Seleccione un estudiante</option>
+                                            {estudiantes.map(est => (
+                                                <option key={est.estudiante_id} value={est.estudiante_id}>
+                                                    {est.nombre} {est.apellido}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="mb-3">
                                         <label className="form-label">Mensaje</label>

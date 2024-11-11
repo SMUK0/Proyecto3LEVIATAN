@@ -35,35 +35,38 @@ class NotaController extends Controller
 
     // Crear una nueva nota
     public function store(Request $request)
-    {
-        // Validar los datos recibidos
-        $validator = Validator::make($request->all(), [
-            'estudiante_id' => 'required|exists:estudiantes,estudiante_id',
-            'curso_id' => 'required|exists:cursos,curso_id',
-            'materia_id' => 'required|exists:materias,materia_id',
-            'maestro_id' => 'required|exists:usuarios,user_id',
-            'nota' => 'required|numeric|min:0|max:10',
-            'fecha' => 'required|date',
-            'observaciones' => 'nullable|string'
-        ]);
+{
+    // Validar los datos recibidos
+    $validator = Validator::make($request->all(), [
+        'estudiante_id' => 'required|exists:estudiantes,estudiante_id',
+        'curso_id' => 'required|exists:cursos,curso_id',  // El curso debe existir y ser válido
+        'materia_id' => 'required|exists:materias,materia_id',
+        'maestro_id' => 'required|exists:usuarios,user_id',
+        'nota' => 'required|numeric|min:0|max:10',
+        'fecha' => 'required|date',
+        'observaciones' => 'nullable|string'
+    ]);
 
-        if ($validator->fails()) {
-            Log::warning('Error de validación al crear nota: ', $validator->errors()->toArray());
-            return response()->json(['message' => 'Error de validación', 'errors' => $validator->errors()], 422);
-        }
-
-        $validatedData = $validator->validated();
-        Log::info('Datos validados en el controlador:', $validatedData);
-
-        try {
-            $nota = Nota::create($validatedData);
-            Log::info('Nota creada correctamente:', $nota->toArray());
-            return response()->json(['status' => 'success', 'nota' => $nota], 201);
-        } catch (\Exception $e) {
-            Log::error('Error al crear nota: ' . $e->getMessage());
-            return response()->json(['message' => 'Error interno al crear la nota'], 500);
-        }
+    if ($validator->fails()) {
+        Log::warning('Error de validación al crear nota: ', $validator->errors()->toArray());
+        return response()->json(['message' => 'Error de validación', 'errors' => $validator->errors()], 422);
     }
+
+    $validatedData = $validator->validated();
+
+    // Log para confirmar que el curso se asigna correctamente al estudiante
+    Log::info('Datos validados en el controlador:', $validatedData);
+
+    try {
+        $nota = Nota::create($validatedData);  // Crea la nota con datos validados
+        Log::info('Nota creada correctamente:', $nota->toArray());
+        return response()->json(['status' => 'success', 'nota' => $nota], 201);
+    } catch (\Exception $e) {
+        Log::error('Error al crear nota: ' . $e->getMessage());
+        return response()->json(['message' => 'Error interno al crear la nota'], 500);
+    }
+}
+
 
     // Obtener una nota por ID
     public function show($id)

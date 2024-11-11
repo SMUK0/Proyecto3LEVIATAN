@@ -22,23 +22,55 @@ class UsuarioController extends Controller
         return view('usuarios', data: compact('usuarios'));
     }
 
+    // Lista de palabras prohibidas
+private $palabrasProhibidas = ['groseria1', 'groseria2', 'groseria3']; // reemplaza con palabras específicas
+
     // Crear un nuevo usuario
     public function store(Request $request)
 {
     $validatedData = $request->validate([
-        'nombre' => 'required|max:100',
-        'apellido' => 'required|max:100',
+        'nombre' => [
+            'required',
+            'max:100',
+            'regex:/^[a-zA-Z\s]+$/',
+            function ($attribute, $value, $fail) {
+                if (preg_match('/^(.)\1*$/', $value)) {
+                    $fail("El $attribute no puede contener un solo carácter repetido.");
+                }
+                foreach ($this->palabrasProhibidas as $palabra) {
+                    if (stripos($value, $palabra) !== false) {
+                        $fail("El $attribute contiene palabras no permitidas.");
+                    }
+                }
+            }
+        ],
+        'apellido' => [
+            'required',
+            'max:100',
+            'regex:/^[a-zA-Z\s]+$/',
+            function ($attribute, $value, $fail) {
+                if (preg_match('/^(.)\1*$/', $value)) {
+                    $fail("El $attribute no puede contener un solo carácter repetido.");
+                }
+                foreach ($this->palabrasProhibidas as $palabra) {
+                    if (stripos($value, $palabra) !== false) {
+                        $fail("El $attribute contiene palabras no permitidas.");
+                    }
+                }
+            }
+        ],
         'email' => 'required|email|unique:usuarios,email',
-        'password' => 'required|min:8',
-        'rol_id' => 'required|integer'
+        'password' => 'required|min:8|regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).+$/',
+        'rol_id' => 'required|integer|exists:roles,rol_id',
     ]);
 
-    $validatedData['password_hash'] = bcrypt($request->password);
-
+    $validatedData['password'] = bcrypt($request->password);
     $usuario = Usuario::create($validatedData);
 
     return response()->json($usuario, 201);
 }
+
+
 
 
     // Obtener un usuario por ID
@@ -59,18 +91,24 @@ class UsuarioController extends Controller
         return response()->json(['message' => 'Usuario no encontrado'], 404);
     }
 
-    // Validar los datos, asegurando que no se requiere una nueva contraseña si no se provee
+    // Validar los datos, permitiendo que la contraseña sea opcional
     $validatedData = $request->validate([
         'nombre' => 'sometimes|required|max:100',
         'apellido' => 'sometimes|required|max:100',
-'email' => 'sometimes|required|email|unique:usuarios,email,' . $id . ',user_id',
-        'password' => 'nullable|min:8', // Hacer que la contraseña sea opcional en la actualización
+        'email' => 'sometimes|required|email|unique:usuarios,email,' . $id . ',user_id',
+        'password' => [
+            'nullable',
+            'min:8',
+            'regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).+$/'
+        ],
         'rol_id' => 'sometimes|required|integer|exists:roles,rol_id'
     ]);
 
-    // Solo encriptar la contraseña si fue provista
+    // Solo encriptar y actualizar la contraseña si se proporciona
     if ($request->filled('password')) {
-        $validatedData['password_hash'] = bcrypt($request->password);
+        $validatedData['password'] = bcrypt($request->password); // Guardar en el campo 'password'
+    } else {
+        unset($validatedData['password']); // Remover el campo si está vacío
     }
 
     // Actualizar el usuario
@@ -78,6 +116,7 @@ class UsuarioController extends Controller
 
     return response()->json($usuario, 200);
 }
+
 
 
     // Eliminar un usuario

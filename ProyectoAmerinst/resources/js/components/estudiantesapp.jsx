@@ -21,16 +21,25 @@ const EstudiantesApp = () => {
     const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
+        fetchEstudiantes();
+        fetchCursos();
+    }, []);
+
+    const fetchEstudiantes = () => {
+        setLoading(true);
         fetch('/api/estudiantes')
             .then(response => response.ok ? response.json() : Promise.reject('Error al cargar estudiantes'))
             .then(data => setEstudiantes(data))
-            .catch(() => toast.error("Error al cargar estudiantes"));
+            .catch(() => toast.error("Error al cargar estudiantes"))
+            .finally(() => setLoading(false));
+    };
 
+    const fetchCursos = () => {
         fetch('/api/cursos')
             .then(response => response.ok ? response.json() : Promise.reject('Error al cargar cursos'))
             .then(data => setCursos(data))
             .catch(() => toast.error("Error al cargar cursos"));
-    }, []);
+    };
 
     const calculateAge = (fecha_nacimiento) => {
         const birthDate = new Date(fecha_nacimiento);
@@ -85,14 +94,10 @@ const EstudiantesApp = () => {
             body: JSON.stringify(form)
         })
             .then(response => response.json())
-            .then(data => {
-                if (editMode) {
-                    setEstudiantes(estudiantes.map(est => est.estudiante_id === editId ? data : est));
-                    toast.success("Estudiante actualizado exitosamente");
-                } else {
-                    setEstudiantes([...estudiantes, data]);
-                    toast.success("Estudiante agregado exitosamente");
-                }
+            .then(() => {
+                fetchEstudiantes(); // Recargar estudiantes después de agregar o editar
+                fetchCursos();      // Recargar cursos después de agregar o editar
+                toast.success(editMode ? "Estudiante actualizado exitosamente" : "Estudiante agregado exitosamente");
                 handleCloseModal();
             })
             .catch(() => toast.error("Error al crear o actualizar el estudiante"))
@@ -111,6 +116,12 @@ const EstudiantesApp = () => {
         setShowModal(true);
     };
 
+    const handleAdd = () => {
+        setForm({ nombre: '', apellido: '', fecha_nacimiento: '', curso_id: '' });
+        setEditMode(false);
+        setShowModal(true);
+    };
+
     const handleDelete = (id) => {
         Swal.fire({
             title: '¿Estás seguro?',
@@ -124,7 +135,7 @@ const EstudiantesApp = () => {
                 setLoading(true);
                 fetch(`/api/estudiantes/${id}`, { method: 'DELETE' })
                     .then(() => {
-                        setEstudiantes(estudiantes.filter(est => est.estudiante_id !== id));
+                        fetchEstudiantes(); // Recargar estudiantes después de eliminar
                         toast.success("Estudiante eliminado exitosamente");
                     })
                     .catch(() => toast.error("Error al eliminar estudiante"))
@@ -148,7 +159,7 @@ const EstudiantesApp = () => {
 
     return (
         <div className="container">
-            <button className="btn btn-primary my-4" onClick={() => setShowModal(true)}>
+            <button className="btn btn-primary my-4" onClick={handleAdd}>
                 Agregar Estudiante
             </button>
 
@@ -199,10 +210,29 @@ const EstudiantesApp = () => {
                                         {errors.apellido && <div className="text-danger">{errors.apellido}</div>}
                                     </div>
                                     <div className="mb-3">
-                                        <label className="form-label">Fecha de Nacimiento</label>
-                                        <input type="date" name="fecha_nacimiento" className="form-control" value={form.fecha_nacimiento} onChange={handleChange} required />
-                                        {errors.fecha_nacimiento && <div className="text-danger">{errors.fecha_nacimiento}</div>}
-                                    </div>
+    <label className="form-label">Fecha de Nacimiento</label>
+    <input
+        type="date"
+        name="fecha_nacimiento"
+        className="form-control"
+        value={form.fecha_nacimiento}
+        onChange={(e) => {
+            const { value } = e.target;
+            const dateParts = value.split("-");
+            
+            // Limitar el año a cuatro dígitos si se ingresa de forma manual
+            if (dateParts[0] && dateParts[0].length > 4) {
+                dateParts[0] = dateParts[0].slice(0, 4);
+            }
+            
+            setForm({ ...form, fecha_nacimiento: dateParts.join("-") });
+        }}
+        required
+    />
+    {errors.fecha_nacimiento && <div className="text-danger">{errors.fecha_nacimiento}</div>}
+</div>
+
+
                                     <div className="mb-3">
                                         <label className="form-label">Curso</label>
                                         <select name="curso_id" className="form-select" value={form.curso_id} onChange={handleChange} required>

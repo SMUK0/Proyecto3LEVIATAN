@@ -31,6 +31,7 @@ Route::get('/login', function () {
 use App\Http\Controllers\AuthController;
 
 Route::post('/login', [AuthController::class, 'login']);
+// Ruta de cierre de sesión en web.php
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 Route::get('/user', [AuthController::class, 'getUser'])->middleware('auth');
 

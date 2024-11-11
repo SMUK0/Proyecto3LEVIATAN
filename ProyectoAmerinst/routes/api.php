@@ -76,6 +76,9 @@ Route::get('/maestro-cursos/{maestro_id}/{curso_id}', [MaestroCursosController::
 Route::put('/maestro-cursos/{maestro_id}/{curso_id}', [MaestroCursosController::class, 'update']);
 Route::delete('/maestro-cursos/{maestro_id}/{curso_id}', [MaestroCursosController::class, 'destroy']);
 
+
+Route::get('/estudiantes/filtrados', [NotificacionController::class, 'estudiantesPorMaestro']);
+
 /* Estudiante-Padres */
 Route::get('/estudiante-padres', [EstudiantePadresController::class, 'apiIndex']);
 Route::post('/estudiante-padres',[EstudiantePadresController::class, 'store']);
@@ -83,6 +86,8 @@ Route::get('/estudiante-padres/{maestro_id}/{curso_id}', [EstudiantePadresContro
 Route::put('/estudiante-padres/{estudiante_id}/{padre_id}', [EstudiantePadresController::class, 'update']);
 Route::delete('/estudiante-padres/{estudiante_id}/{padre_id}', [EstudiantePadresController::class, 'destroy']);
 
+// Agrega esta línea al final del archivo de rutas de API
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 
 

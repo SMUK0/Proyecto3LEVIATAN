@@ -16,21 +16,25 @@ const MaestroCursosApp = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
+    // Función para cargar datos de maestro-cursos, usuarios y cursos
+    const loadMaestroCursoData = () => {
+        setLoading(true);
+        Promise.all([
+            fetch('/api/maestro-cursos').then(response => response.json()),
+            fetch('/api/usuarios').then(response => response.json()),
+            fetch('/api/cursos').then(response => response.json())
+        ])
+        .then(([maestroCursosData, usuariosData, cursosData]) => {
+            setMaestroCursos(maestroCursosData);
+            setUsuarios(usuariosData.filter(user => user.rol_id === 2)); // Filtrar usuarios con rol de maestro
+            setCursos(cursosData);
+        })
+        .catch(() => toast.error("Error al cargar datos"))
+        .finally(() => setLoading(false));
+    };
+
     useEffect(() => {
-        fetch('/api/maestro-cursos')
-            .then(response => response.json())
-            .then(data => setMaestroCursos(data))
-            .catch(() => toast.error("Error al cargar maestro-cursos"));
-
-        fetch('/api/usuarios')
-            .then(response => response.json())
-            .then(data => setUsuarios(data.filter(user => user.rol_id === 2)))
-            .catch(() => toast.error("Error al cargar usuarios"));
-
-        fetch('/api/cursos')
-            .then(response => response.json())
-            .then(data => setCursos(data))
-            .catch(() => toast.error("Error al cargar cursos"));
+        loadMaestroCursoData();
     }, []);
 
     const getUserName = (maestro_id) => {
@@ -50,34 +54,30 @@ const MaestroCursosApp = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         setLoading(true);
-
+    
         const method = editMode ? 'PUT' : 'POST';
         const url = editMode
             ? `/api/maestro-cursos/${originalMaestroId}/${originalCursoId}`
             : '/api/maestro-cursos';
-
+    
         fetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(form),
         })
             .then(response => {
-                if (response.status === 404) {
-                    throw new Error("Relación Maestro-Curso no encontrada para actualizar");
-                }
                 if (!response.ok) {
-                    throw new Error("Error en la solicitud");
+                    return response.json().then((errorData) => {
+                        throw new Error(errorData.message || 'Error en la solicitud');
+                    });
                 }
                 return response.json();
             })
             .then(data => {
+                loadMaestroCursoData(); // Recargar datos después de agregar o editar
                 if (editMode) {
-                    setMaestroCursos(maestroCursos.map(mc =>
-                        mc.maestro_id === originalMaestroId && mc.curso_id === originalCursoId ? data : mc
-                    ));
                     toast.success("Maestro-Curso actualizado exitosamente");
                 } else {
-                    setMaestroCursos([...maestroCursos, data]);
                     toast.success("Maestro-Curso agregado exitosamente");
                 }
                 handleCloseModal();
@@ -88,6 +88,7 @@ const MaestroCursosApp = () => {
             })
             .finally(() => setLoading(false));
     };
+    
 
     const handleShowAddForm = () => {
         resetForm();
@@ -116,7 +117,7 @@ const MaestroCursosApp = () => {
 
                 fetch(`/api/maestro-cursos/${maestro_id}/${curso_id}`, { method: 'DELETE' })
                     .then(() => {
-                        setMaestroCursos(maestroCursos.filter(mc => mc.maestro_id !== maestro_id || mc.curso_id !== curso_id));
+                        loadMaestroCursoData();  // Recargar datos después de eliminar
                         toast.success("Maestro-Curso eliminado exitosamente");
                         Swal.fire('Eliminado!', 'El maestro-curso ha sido eliminado.', 'success');
                     })
@@ -143,9 +144,8 @@ const MaestroCursosApp = () => {
 
     return (
         <div className="container my-4">
-
             <button className="btn btn-primary mb-3" onClick={handleShowAddForm}>
-                Agregar Maestro-Curso
+                Asignar Curso a Maestro
             </button>
 
             {loading && <div className="alert alert-info">Cargando...</div>}

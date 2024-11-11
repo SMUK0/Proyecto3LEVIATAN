@@ -21,21 +21,31 @@ const AsistenciasApp = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-    useEffect(() => {
+    const fetchAsistencias = () => {
         fetch('/api/asistencias')
             .then(response => response.json())
             .then(data => setAsistencias(data))
             .catch(() => toast.error("Error al cargar asistencias"));
+    };
 
+    const fetchEstudiantes = () => {
         fetch('/api/estudiantes')
             .then(response => response.json())
             .then(data => setEstudiantes(data))
             .catch(() => toast.error("Error al cargar estudiantes"));
+    };
 
+    const fetchCursos = () => {
         fetch('/api/cursos')
             .then(response => response.json())
             .then(data => setCursos(data))
             .catch(() => toast.error("Error al cargar cursos"));
+    };
+
+    useEffect(() => {
+        fetchAsistencias();
+        fetchEstudiantes();
+        fetchCursos();
     }, []);
 
     const handleChange = (e) => {
@@ -48,6 +58,14 @@ const AsistenciasApp = () => {
                 [name]: value,
                 curso_id: estudianteSeleccionado ? estudianteSeleccionado.curso_id : ''
             });
+        } else if (name === "observaciones") {
+            // Validación para permitir solo caracteres alfanuméricos, espacios y signos de puntuación comunes
+            const validText = /^[a-zA-Z0-9\s.,!?()]*$/;
+            if (validText.test(value) || value === "") {
+                setForm({ ...form, [name]: value });
+            } else {
+                toast.warning("Solo se permiten caracteres alfanuméricos y signos de puntuación básicos en Observaciones");
+            }
         } else {
             setForm({ ...form, [name]: value });
         }
@@ -60,25 +78,25 @@ const AsistenciasApp = () => {
         const method = editMode ? 'PUT' : 'POST';
         const url = editMode ? `/api/asistencias/${editId}` : '/api/asistencias';
 
+        const updatedForm = {
+            ...form,
+            fecha: new Date().toISOString().split('T')[0],
+        };
+
         fetch(url, {
             method,
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(form)
+            body: JSON.stringify(updatedForm)
         })
             .then(async (response) => {
                 if (!response.ok) throw new Error(await response.text());
                 return response.json();
             })
             .then(data => {
-                if (editMode) {
-                    setAsistencias(asistencias.map(asistencia => asistencia.asistencia_id === editId ? data : asistencia));
-                    toast.success("Asistencia actualizada exitosamente");
-                } else {
-                    setAsistencias([...asistencias, data]);
-                    toast.success("Asistencia agregada exitosamente");
-                }
+                fetchAsistencias();  // Recargar asistencias después de agregar o editar
+                toast.success(editMode ? "Asistencia actualizada exitosamente" : "Asistencia agregada exitosamente");
                 handleCloseModal();
             })
             .catch(error => toast.error("Error al crear o actualizar la asistencia"))
@@ -89,7 +107,7 @@ const AsistenciasApp = () => {
         setForm({
             estudiante_id: asistencia.estudiante_id,
             curso_id: asistencia.curso_id,
-            fecha: asistencia.fecha,
+            fecha: new Date().toISOString().split('T')[0],
             estado: asistencia.estado,
             observaciones: asistencia.observaciones || ''
         });
@@ -111,7 +129,7 @@ const AsistenciasApp = () => {
                 setLoading(true);
                 fetch(`/api/asistencias/${id}`, { method: 'DELETE' })
                     .then(() => {
-                        setAsistencias(asistencias.filter(asistencia => asistencia.asistencia_id !== id));
+                        fetchAsistencias();  // Recargar asistencias después de eliminar
                         toast.success("Asistencia eliminada exitosamente");
                     })
                     .catch(() => toast.error("Ocurrió un problema al eliminar la asistencia"))
@@ -124,6 +142,7 @@ const AsistenciasApp = () => {
         setShowModal(false);
         setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: 'Presente', observaciones: '' });
         setEditMode(false);
+        setEditId(null);
     };
 
     const getEstudianteNombre = (id) => {
@@ -159,7 +178,7 @@ const AsistenciasApp = () => {
                             <td>{asistencia.asistencia_id}</td>
                             <td>{getEstudianteNombre(asistencia.estudiante_id)}</td>
                             <td>{getCursoNombre(asistencia.curso_id)}</td>
-                            <td>{asistencia.fecha}</td>
+                            <td>{editMode && asistencia.asistencia_id === editId ? new Date().toLocaleString() : new Date(asistencia.created_at).toLocaleString()}</td>
                             <td>{asistencia.estado}</td>
                             <td>
                                 <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(asistencia)}>Editar</button>

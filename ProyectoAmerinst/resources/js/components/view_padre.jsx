@@ -19,30 +19,44 @@ const ViewPadre = () => {
     ];
 
     useEffect(() => {
-        // Simula la obtención del usuario autenticado y carga de estudiantes relacionados
         const userData = JSON.parse(localStorage.getItem('user'));
-        if (userData && userData.rol_id === 3) {
+    
+        if (!userData || userData.rol_id !== 3) { // 3 es el rol para padres
+            window.location.href = '/login';
+        } else {
             setUser({ nombre: userData.nombre, rol: 'Padre' });
-
+    
             // Filtra estudiantes relacionados con el usuario logueado
             const estudiantesRelacionados = ejemploEstudiantes.filter(est => est.usuario_id === userData.user_id);
             setEstudiantes(estudiantesRelacionados);
-
-            // Mostrar relaciones en la consola
-            console.log("Relaciones de estudiantes con el usuario logueado:", estudiantesRelacionados);
-        } else {
-            window.location.href = '/login';
         }
     }, []);
+    
 
     const toggleMenu = () => setIsMenuCollapsed(!isMenuCollapsed);
 
     const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
     const handleLogout = () => {
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        fetch('/api/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include' // Incluir cookies de sesión si usas autenticación basada en cookies
+        })
+        .then(response => {
+            if (response.ok) {
+                // Limpia el almacenamiento local y redirige al login
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            } else {
+                console.error('Error al cerrar sesión');
+            }
+        })
+        .catch(error => console.error('Error al cerrar sesión:', error));
     };
+    
 
     useEffect(() => {
         const handleClickOutside = (event) => {

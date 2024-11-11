@@ -11,6 +11,7 @@ const ViewMaestro = () => {
     const [activeComponent, setActiveComponent] = useState('');
     const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [user, setUser] = useState(null);
     const dropdownRef = useRef(null);
 
     // Alternar el menú
@@ -18,22 +19,35 @@ const ViewMaestro = () => {
 
     // Cerrar sesión y redirigir
     const handleLogout = () => {
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        fetch('/api/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include' 
+        })
+        .then(response => {
+            if (response.ok) {
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            } else {
+                console.error('Error al cerrar sesión');
+            }
+        })
+        .catch(error => console.error('Error al cerrar sesión:', error));
     };
 
     // Alternar el menú desplegable del perfil
     const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
-    // Cerrar el menú desplegable si se hace clic fuera de él
+    // Validación de usuario y rol
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (userData && userData.rol_id === 2) { 
+            setUser(userData);
+        } else {
+            window.location.href = '/login';
+        }
     }, []);
 
     // Renderizar el componente activo seleccionado
@@ -46,7 +60,12 @@ const ViewMaestro = () => {
             case 'notificaciones':
                 return <NotificacionesApp />;
             default:
-                return <div className="text-center mt-5">Por favor selecciona una opción del menú</div>;
+                return (
+                    <div className="text-center mt-5">
+                            <h4>¡Bienvenido al panel de Maestro {user ? `${user.nombre} ${user.apellido}` : 'Administrador'}!</h4>
+                            <p>Seleccione una opción del menú para comenzar.</p>
+                    </div>
+                );
         }
     };
 
@@ -91,6 +110,12 @@ const ViewMaestro = () => {
                             <FontAwesomeIcon icon={faUser} size="lg" className="me-2" onClick={toggleDropdown} />
                             {isDropdownOpen && (
                                 <div className="dropdown-menu dropdown-menu-right show position-absolute" style={{ top: '40px', right: '10px' }}>
+                                    {user && (
+                                        <div className="px-3 py-2">
+                                            <p className="mb-1 fw-bold">{user.nombre} {user.apellido}</p>
+                                            <p className="mb-2 text-muted">Rol: Maestro</p>
+                                        </div>
+                                    )}
                                     <button className="dropdown-item text-danger" onClick={handleLogout}>
                                         <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />Cerrar Sesión
                                     </button>

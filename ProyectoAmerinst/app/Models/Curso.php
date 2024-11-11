@@ -29,4 +29,10 @@ class Curso extends Model
         return $this->belongsToMany(Materia::class, 'maestro_curso', 'curso_id', 'materia_id')
                     ->withPivot('maestro_id');
     }
+
+    public function maestros()
+    {
+        return $this->belongsToMany(Usuario::class, 'maestro_curso', 'curso_id', 'user_id');
+    }
+    
 }

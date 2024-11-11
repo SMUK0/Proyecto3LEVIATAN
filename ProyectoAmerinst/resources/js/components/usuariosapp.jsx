@@ -21,35 +21,81 @@ const UsuariosApp = () => {
     const [editId, setEditId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [rolesLoaded, setRolesLoaded] = useState(false); // Estado para verificar si los roles están cargados
 
     useEffect(() => {
+        fetchUsuarios();
+        fetchRoles();
+    }, []);
+    
+    const fetchUsuarios = () => {
+        setLoading(true);
         fetch('/api/usuarios')
             .then(response => response.json())
             .then(data => setUsuarios(data))
-            .catch(() => toast.error("Error al cargar usuarios"));
-
+            .catch(() => toast.error("Error al cargar usuarios"))
+            .finally(() => setLoading(false));
+    };
+    
+    const fetchRoles = () => {
         fetch('/api/roles')
             .then(response => response.json())
-            .then(data => setRoles(data))
+            .then(data => {
+                setRoles(data);
+                setRolesLoaded(true);
+            })
             .catch(() => toast.error("Error al cargar roles"));
-    }, []);
+    };
+    
+
+    const palabrasProhibidas = ['groseria1', 'groseria2', 'groseria3']; // Lista de palabras prohibidas
 
     const validateForm = () => {
         const newErrors = {};
-        if (!form.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio';
-        else if (!/^[a-zA-Z\s]+$/.test(form.nombre)) newErrors.nombre = 'El nombre solo debe contener letras y espacios';
 
-        if (!form.apellido.trim()) newErrors.apellido = 'El apellido es obligatorio';
-        else if (!/^[a-zA-Z\s]+$/.test(form.apellido)) newErrors.apellido = 'El apellido solo debe contener letras y espacios';
+        // Función para detectar caracteres repetidos
+        const esCaracterRepetido = (valor) => /^(.)\1*$/.test(valor);
 
-        if (!form.email.trim()) newErrors.email = 'El correo electrónico es obligatorio';
-        else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = 'El formato del correo es inválido';
+        // Validación de nombre
+        if (!form.nombre.trim()) {
+            newErrors.nombre = 'El nombre es obligatorio';
+        } else if (!/^[a-zA-Z\s]+$/.test(form.nombre)) {
+            newErrors.nombre = 'El nombre solo debe contener letras y espacios';
+        } else if (palabrasProhibidas.some(palabra => form.nombre.toLowerCase().includes(palabra))) {
+            newErrors.nombre = 'El nombre contiene palabras no permitidas';
+        } else if (esCaracterRepetido(form.nombre)) {
+            newErrors.nombre = 'El nombre no puede contener un solo carácter repetido';
+        }
 
-        if (!form.password.trim()) newErrors.password = 'La contraseña es obligatoria';
-        else if (form.password.length > 0 && !/^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/.test(form.password))
-            newErrors.password = 'La contraseña debe incluir mayúscula, número y carácter especial';
+        // Validación de apellido
+        if (!form.apellido.trim()) {
+            newErrors.apellido = 'El apellido es obligatorio';
+        } else if (!/^[a-zA-Z\s]+$/.test(form.apellido)) {
+            newErrors.apellido = 'El apellido solo debe contener letras y espacios';
+        } else if (palabrasProhibidas.some(palabra => form.apellido.toLowerCase().includes(palabra))) {
+            newErrors.apellido = 'El apellido contiene palabras no permitidas';
+        } else if (esCaracterRepetido(form.apellido)) {
+            newErrors.apellido = 'El apellido no puede contener un solo carácter repetido';
+        }
 
+        // Validación de email
+        if (!form.email.trim()) {
+            newErrors.email = 'El correo electrónico es obligatorio';
+        } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+            newErrors.email = 'El formato del correo es inválido';
+        }
+
+        // Validación de contraseña (opcional según modo)
+        const passwordPattern = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/;
+        if (!editMode && !form.password.trim()) {
+            newErrors.password = 'La contraseña es obligatoria';
+        } else if (form.password && !passwordPattern.test(form.password)) {
+            newErrors.password = 'La contraseña debe incluir mayúscula, número, carácter especial y al menos 8 caracteres';
+        }
+
+        // Validación de rol
         if (!form.rol_id) newErrors.rol_id = 'El rol es obligatorio';
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -78,15 +124,15 @@ const UsuariosApp = () => {
         setLoading(true);
         const method = editMode ? 'PUT' : 'POST';
         const url = editMode ? `/api/usuarios/${editId}` : '/api/usuarios';
-
+    
         fetch(url, {
             method,
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify(usuario),
         })
             .then(response => response.ok ? response.json() : Promise.reject())
-            .then(data => {
-                setUsuarios(editMode ? usuarios.map(u => (u.user_id === editId ? data : u)) : [...usuarios, data]);
+            .then(() => {
+                fetchUsuarios(); // Volver a cargar usuarios después de guardar
                 toast.success(editMode ? 'Usuario actualizado' : 'Usuario agregado');
                 setShowModal(false);
                 setEditMode(false);
@@ -97,6 +143,7 @@ const UsuariosApp = () => {
             .catch(() => toast.error('Error en la operación'))
             .finally(() => setLoading(false));
     };
+    
 
     const handleDelete = (id) => {
         Swal.fire({
@@ -123,15 +170,15 @@ const UsuariosApp = () => {
     };
 
     const obtenerNombreRol = (rol_id) => {
+        if (!roles || roles.length === 0) return 'Cargando...'; // Indica que los roles están cargando
         const rol = roles.find(r => r.rol_id === rol_id);
         return rol ? rol.nombre : 'Sin rol';
     };
 
     return (
         <div className="container">
-            <button className="btn btn-primary mt-4 mb-4" onClick={() => setShowModal(true)}>Agregar Usuario</button>
-
-            {loading && <div className="alert alert-info">Cargando...</div>}
+            {loading && <div className="alert alert-info">Cargando datos...</div>}
+            <button className="btn btn-primary mt-4 mb-4" onClick={() => setShowModal(true)} disabled={!rolesLoaded}>Agregar Usuario</button>
 
             <table className="table table-hover table-bordered">
                 <thead className="table-dark">
@@ -157,7 +204,7 @@ const UsuariosApp = () => {
                 </tbody>
             </table>
 
-            {showModal && (
+            {showModal && rolesLoaded && (
                 <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
                     <div className="modal-dialog">
                         <div className="modal-content">
@@ -184,7 +231,14 @@ const UsuariosApp = () => {
                                     </div>
                                     <div className="mb-3">
                                         <label className="form-label">Contraseña</label>
-                                        <input name="password" type="password" className="form-control" value={form.password} onChange={handleChange} required />
+                                        <input
+                                            name="password"
+                                            type="password"
+                                            className="form-control"
+                                            value={form.password}
+                                            onChange={handleChange}
+                                            required={!editMode}
+                                        />
                                         {errors.password && <div className="text-danger">{errors.password}</div>}
                                     </div>
                                     <div className="mb-3">

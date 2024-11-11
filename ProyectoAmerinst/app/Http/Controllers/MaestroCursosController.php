@@ -32,18 +32,24 @@ public function store(Request $request)
         'curso_id' => 'required|exists:cursos,curso_id',
     ]);
 
-    // Verificar si ya existe la relación
-    $exists = MaestroCurso::where('maestro_id', $validatedData['maestro_id'])
-        ->where('curso_id', $validatedData['curso_id'])
-        ->exists();
-
-    if ($exists) {
-        return response()->json(['message' => 'Esta relación ya existe'], 409);
-    }
-
     try {
-        $maestroCurso = MaestroCurso::create($validatedData);
+        // Verificar si ya existe la relación
+        $exists = MaestroCurso::where('maestro_id', $validatedData['maestro_id'])
+            ->where('curso_id', $validatedData['curso_id'])
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'Esta relación ya existe'], 409);
+        }
+
+        // Crear la relación maestro-curso
+        $maestroCurso = new MaestroCurso();
+        $maestroCurso->maestro_id = $validatedData['maestro_id'];
+        $maestroCurso->curso_id = $validatedData['curso_id'];
+        $maestroCurso->save();
+
         return response()->json($maestroCurso, 201);
+
     } catch (\Exception $e) {
         Log::error('Error al crear maestro-curso: ' . $e->getMessage());
         return response()->json(['message' => 'Error interno al crear maestro-curso'], 500);
@@ -54,25 +60,36 @@ public function store(Request $request)
 
 public function update(Request $request, $maestro_id, $curso_id)
 {
-    // Encontrar el registro maestro-curso con los identificadores proporcionados
-    $maestroCurso = MaestroCurso::where('maestro_id', $maestro_id)
-                                ->where('curso_id', $curso_id)
-                                ->first();
+    try {
+        Log::info("Intentando actualizar Maestro-Curso con maestro_id={$maestro_id}, curso_id={$curso_id}");
 
-    if (!$maestroCurso) {
-        return response()->json(['message' => 'Relación Maestro-Curso no encontrada'], 404);
+        // Validar los datos
+        $validatedData = $request->validate([
+            'maestro_id' => 'required|exists:usuarios,user_id',
+            'curso_id' => 'required|exists:cursos,curso_id',
+        ]);
+
+        Log::info("Datos validados para actualización", ['validatedData' => $validatedData]);
+
+        // Buscar y eliminar el registro existente
+        MaestroCurso::where('maestro_id', $maestro_id)
+                    ->where('curso_id', $curso_id)
+                    ->delete();
+
+        Log::info("Eliminando relación Maestro-Curso existente para actualizar");
+
+        // Crear un nuevo registro con los datos actualizados
+        $newMaestroCurso = MaestroCurso::create($validatedData);
+
+        Log::info("Relación Maestro-Curso actualizada exitosamente", ['newData' => $newMaestroCurso]);
+
+        return response()->json($newMaestroCurso, 200);
+    } catch (\Exception $e) {
+        Log::error("Error al actualizar Maestro-Curso: " . $e->getMessage());
+        return response()->json(['message' => 'Error interno al actualizar maestro-curso'], 500);
     }
-
-    // Validar la entrada del formulario
-    $validatedData = $request->validate([
-        'maestro_id' => 'required|exists:usuarios,user_id',
-        'curso_id' => 'required|exists:cursos,curso_id',
-    ]);
-
-    // Actualizar el registro
-    $maestroCurso->update($validatedData);
-    return response()->json($maestroCurso, 200);
 }
+
 
 
 

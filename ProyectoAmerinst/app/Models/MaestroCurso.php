@@ -14,11 +14,11 @@ class MaestroCurso extends Model
     // Campos asignables en masa
     protected $fillable = ['maestro_id', 'curso_id'];
 
-    public $timestamps = false; // Esta tabla no tiene timestamps
+    public $timestamps = false;
 
-    // Especificar que la clave primaria no es autoincremental
+    // Eliminamos la definición de primaryKey compuesta
     public $incrementing = false;
 
-    // Definir la clave primaria compuesta
-    protected $primaryKey = ['maestro_id', 'curso_id'];
+    // Establecemos la clave primaria como un string (requerido cuando incrementing está en false)
+    protected $keyType = 'string';
 }

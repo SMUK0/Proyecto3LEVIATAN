@@ -18,7 +18,6 @@ const ViewAdministrador = () => {
 
     useEffect(() => {
         const userData = JSON.parse(localStorage.getItem('user'));
-        
         if (userData && userData.rol_id === 1) {
             setUser(userData);
         } else {
@@ -29,10 +28,24 @@ const ViewAdministrador = () => {
     const toggleMenu = () => setIsMenuCollapsed(!isMenuCollapsed);
 
     const handleLogout = () => {
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        fetch('/api/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            if (response.ok) {
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            } else {
+                console.error('Error al cerrar sesión');
+            }
+        })
+        .catch(error => console.error('Error al cerrar sesión:', error));
     };
-
+    
     const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
     useEffect(() => {
@@ -45,6 +58,11 @@ const ViewAdministrador = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const reloadComponent = () => {
+        setActiveComponent('');
+        setTimeout(() => setActiveComponent('maestrocurso'), 100);
+    };
+
     const renderComponent = () => {
         switch (activeComponent) {
             case 'usuarios':
@@ -56,9 +74,12 @@ const ViewAdministrador = () => {
             case 'cursos':
                 return <CursosApp />;
             case 'maestrocurso':
-                return <MaestroCursosApp />;
+                return <MaestroCursosApp onReload={reloadComponent} />;
             default:
-                return <div className="text-center mt-5">Por favor selecciona una opción del menú</div>;
+                return <div className="text-center mt-5">
+                            <h4>¡Bienvenido al panel de Administrador {user ? `${user.nombre} ${user.apellido}` : 'Administrador'}!</h4>
+                            <p>Selecciona una opción en el menú para comenzar.</p>
+                       </div>;
         }
     };
 
@@ -79,7 +100,7 @@ const ViewAdministrador = () => {
                               { label: 'Estudiantes', value: 'estudiantes', icon: faGraduationCap },
                               { label: 'Materias', value: 'materias', icon: faBook },
                               { label: 'Cursos', value: 'cursos', icon: faClipboard },
-                              { label: 'Maestro-Curso', value: 'maestrocurso', icon: faChalkboardTeacher }
+                              { label: 'Asignación de Curso', value: 'maestrocurso', icon: faChalkboardTeacher }
                             ].map((item) => (
                                 <li key={item.value} className="nav-item mb-2">
                                     <button className="btn btn-outline-light w-100 d-flex align-items-center" onClick={() => setActiveComponent(item.value)}>
@@ -120,7 +141,6 @@ const ViewAdministrador = () => {
                     </div>
                 </header>
                 
-                {/* Renderización del componente seleccionado */}
                 <div className="p-4">
                     {renderComponent()}
                 </div>
