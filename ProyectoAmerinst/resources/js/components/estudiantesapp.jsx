@@ -12,7 +12,7 @@ const EstudiantesApp = () => {
         nombre: '',
         apellido: '',
         fecha_nacimiento: '',
-        curso_id: ''
+        curso_id: ''  // Dejar vacío como opción predeterminada para "Sin asignar"
     });
     const [errors, setErrors] = useState({});
     const [editMode, setEditMode] = useState(false);
@@ -68,8 +68,6 @@ const EstudiantesApp = () => {
         if (!form.fecha_nacimiento) newErrors.fecha_nacimiento = 'La fecha de nacimiento es obligatoria';
         else if (!isValidAge(form.fecha_nacimiento)) newErrors.fecha_nacimiento = 'La edad debe estar entre 12 y 20 años';
 
-        if (!form.curso_id) newErrors.curso_id = 'El curso es obligatorio';
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -95,8 +93,7 @@ const EstudiantesApp = () => {
         })
             .then(response => response.json())
             .then(() => {
-                fetchEstudiantes(); // Recargar estudiantes después de agregar o editar
-                fetchCursos();      // Recargar cursos después de agregar o editar
+                fetchEstudiantes();
                 toast.success(editMode ? "Estudiante actualizado exitosamente" : "Estudiante agregado exitosamente");
                 handleCloseModal();
             })
@@ -109,7 +106,7 @@ const EstudiantesApp = () => {
             nombre: estudiante.nombre,
             apellido: estudiante.apellido,
             fecha_nacimiento: estudiante.fecha_nacimiento,
-            curso_id: estudiante.curso_id
+            curso_id: estudiante.curso_id || ''  // Si no hay curso asignado, dejar como vacío
         });
         setEditId(estudiante.estudiante_id);
         setEditMode(true);
@@ -135,7 +132,7 @@ const EstudiantesApp = () => {
                 setLoading(true);
                 fetch(`/api/estudiantes/${id}`, { method: 'DELETE' })
                     .then(() => {
-                        fetchEstudiantes(); // Recargar estudiantes después de eliminar
+                        fetchEstudiantes();
                         toast.success("Estudiante eliminado exitosamente");
                     })
                     .catch(() => toast.error("Error al eliminar estudiante"))
@@ -210,33 +207,14 @@ const EstudiantesApp = () => {
                                         {errors.apellido && <div className="text-danger">{errors.apellido}</div>}
                                     </div>
                                     <div className="mb-3">
-    <label className="form-label">Fecha de Nacimiento</label>
-    <input
-        type="date"
-        name="fecha_nacimiento"
-        className="form-control"
-        value={form.fecha_nacimiento}
-        onChange={(e) => {
-            const { value } = e.target;
-            const dateParts = value.split("-");
-            
-            // Limitar el año a cuatro dígitos si se ingresa de forma manual
-            if (dateParts[0] && dateParts[0].length > 4) {
-                dateParts[0] = dateParts[0].slice(0, 4);
-            }
-            
-            setForm({ ...form, fecha_nacimiento: dateParts.join("-") });
-        }}
-        required
-    />
-    {errors.fecha_nacimiento && <div className="text-danger">{errors.fecha_nacimiento}</div>}
-</div>
-
-
+                                        <label className="form-label">Fecha de Nacimiento</label>
+                                        <input type="date" name="fecha_nacimiento" className="form-control" value={form.fecha_nacimiento} onChange={handleChange} required />
+                                        {errors.fecha_nacimiento && <div className="text-danger">{errors.fecha_nacimiento}</div>}
+                                    </div>
                                     <div className="mb-3">
                                         <label className="form-label">Curso</label>
-                                        <select name="curso_id" className="form-select" value={form.curso_id} onChange={handleChange} required>
-                                            <option value="">Selecciona un curso</option>
+                                        <select name="curso_id" className="form-select" value={form.curso_id} onChange={handleChange}>
+                                            <option value="">Sin asignar</option> {/* Opción para "Sin asignar" */}
                                             {cursos.map(curso => (
                                                 <option key={curso.curso_id} value={curso.curso_id}>{curso.grado}</option>
                                             ))}

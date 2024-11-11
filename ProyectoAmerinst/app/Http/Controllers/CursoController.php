@@ -73,13 +73,19 @@ class CursoController extends Controller
 
     // Eliminar un curso
     public function destroy($id)
-    {
-        $curso = Curso::find($id);
-        if (!$curso) {
-            return response()->json(['message' => 'Curso no encontrado'], 404);
-        }
+{
+    $curso = Curso::find($id);
 
-        $curso->delete();
-        return response()->json(['message' => 'Curso eliminado']);
+    if (!$curso) {
+        return response()->json(['message' => 'Curso no encontrado'], 404);
     }
+
+    // Desasociar el curso de los estudiantes
+    \DB::table('estudiantes')->where('curso_id', $id)->update(['curso_id' => null]);
+
+    $curso->delete();
+
+    return response()->json(['message' => 'Curso eliminado y estudiantes desasociados']);
+}
+
 }
