@@ -4,31 +4,26 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateAsistenciasTable extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('asistencias', function (Blueprint $table) {
             $table->id('asistencia_id');
             $table->unsignedBigInteger('estudiante_id');
             $table->unsignedBigInteger('curso_id');
+            $table->string('estado', 1); // P = Presente, A = Ausente, T = Tarde
+            $table->date('fecha')->default(DB::raw('CURRENT_DATE'))->change(); // Establece la fecha actual como valor predeterminado
+            $table->timestamps();
 
-            $table->foreign('estudiante_id')->references('estudiante_id')->on('estudiantes')->onDelete('cascade');
-            $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
-            $table->string('estado', 20); // Presente, Ausente, Tarde
-            $table->text('observaciones')->nullable();
-            $table->timestamps();  // Añade 'created_at' y 'updated_at'
+            $table->foreign('estudiante_id')->references('estudiante_id')->on('estudiantes');
+            $table->foreign('curso_id')->references('curso_id')->on('cursos');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('asistencias');
     }
-};
+}
+

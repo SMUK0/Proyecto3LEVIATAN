@@ -1,38 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import Swal from 'sweetalert2';
-import { ToastContainer, toast } from 'react-toastify';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const AsistenciasApp = () => {
     const [asistencias, setAsistencias] = useState([]);
     const [estudiantes, setEstudiantes] = useState([]);
+    const [asistenciaEstados, setAsistenciaEstados] = useState({});
     const [cursos, setCursos] = useState([]);
-    const [form, setForm] = useState({
-        estudiante_id: '',
-        curso_id: '',
-        fecha: new Date().toISOString().split('T')[0],
-        estado: 'Presente',
-        observaciones: ''
-    });
-    const [editMode, setEditMode] = useState(false);
-    const [editId, setEditId] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [showModal, setShowModal] = useState(false);
+    const [selectedCurso, setSelectedCurso] = useState(null);
+    const [estadoSeleccionado, setEstadoSeleccionado] = useState('');
+    const [marcarPendientes, setMarcarPendientes] = useState(false); // Nuevo estado para marcar estudiantes pendientes
 
-    const fetchAsistencias = () => {
-        fetch('/api/asistencias')
-            .then(response => response.json())
-            .then(data => setAsistencias(data))
-            .catch(() => toast.error("Error al cargar asistencias"));
-    };
+    useEffect(() => {
+        fetchEstudiantes();
+        fetchAsistencias();
+        fetchCursos();
+    }, []);
 
     const fetchEstudiantes = () => {
         fetch('/api/estudiantes')
             .then(response => response.json())
             .then(data => setEstudiantes(data))
             .catch(() => toast.error("Error al cargar estudiantes"));
+    };
+
+    const fetchAsistencias = () => {
+        fetch('/api/asistencias')
+            .then(response => response.json())
+            .then(data => setAsistencias(data))
+            .catch(() => toast.error("Error al cargar asistencias"));
     };
 
     const fetchCursos = () => {
@@ -42,206 +40,205 @@ const AsistenciasApp = () => {
             .catch(() => toast.error("Error al cargar cursos"));
     };
 
-    useEffect(() => {
-        fetchAsistencias();
-        fetchEstudiantes();
-        fetchCursos();
-    }, []);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-
-        if (name === "estudiante_id") {
-            const estudianteSeleccionado = estudiantes.find(est => est.estudiante_id === parseInt(value));
-            setForm({
-                ...form,
-                [name]: value,
-                curso_id: estudianteSeleccionado ? estudianteSeleccionado.curso_id : ''
-            });
-        } else if (name === "observaciones") {
-            // Validación para permitir solo caracteres alfanuméricos, espacios y signos de puntuación comunes
-            const validText = /^[a-zA-Z0-9\s.,!?()]*$/;
-            if (validText.test(value) || value === "") {
-                setForm({ ...form, [name]: value });
-            } else {
-                toast.warning("Solo se permiten caracteres alfanuméricos y signos de puntuación básicos en Observaciones");
+    const handleAsistenciaChange = (estudiante, estado) => {
+        setAsistenciaEstados(prevEstados => ({
+            ...prevEstados,
+            [estudiante.estudiante_id]: {
+                estado,
+                curso_id: estudiante.curso_id,
             }
-        } else {
-            setForm({ ...form, [name]: value });
+        }));
+    };
+
+    const handleCursoChange = (e) => {
+        setSelectedCurso(e.target.value);  // Cambiar el curso seleccionado
+        setEstadoSeleccionado('');  // Limpiar el estado seleccionado cuando se cambia el curso
+        setAsistenciaEstados({});   // Limpiar las asistencias previas
+        setMarcarPendientes(false);  // Limpiar la marca de los estudiantes pendientes
+    };
+
+    const estudiantesPorCurso = () => {
+        if (selectedCurso) {
+            return estudiantes.filter(estudiante => estudiante.curso_id === parseInt(selectedCurso));
+        }
+        return [];  // No mostrar estudiantes hasta que se seleccione un curso
+    };
+
+    const handleSeleccionarEstado = (estado) => {
+        setEstadoSeleccionado(estado);  // Establecer el estado seleccionado para todos los estudiantes del curso
+        // Establecer el estado para todos los estudiantes del curso
+        const estudiantesFiltrados = estudiantesPorCurso();
+        const nuevosEstados = {};
+        estudiantesFiltrados.forEach(estudiante => {
+            nuevosEstados[estudiante.estudiante_id] = {
+                estado,
+                curso_id: estudiante.curso_id
+            };
+        });
+        setAsistenciaEstados(nuevosEstados);
+    };
+
+    const handleGuardarAsistencia = () => {
+        // Verificar que todos los estudiantes del curso seleccionado tengan un estado
+        const estudiantesFiltrados = estudiantesPorCurso();
+
+        for (let estudiante of estudiantesFiltrados) {
+            if (!asistenciaEstados[estudiante.estudiante_id]?.estado) {
+                toast.error(`Falta establecer el estado de asistencia para: ${estudiante.nombre} ${estudiante.apellido}`);
+                setMarcarPendientes(true); // Activar la marca de estudiantes pendientes
+                return;  // Salir si falta algún estado
+            }
+        }
+
+        // Si todos los estudiantes tienen estado, proceder a guardar
+        const asistenciaData = Object.keys(asistenciaEstados).map(estudianteId => {
+            const { estado, curso_id } = asistenciaEstados[estudianteId];
+
+            if (!estado || !curso_id) {
+                toast.error("Faltan datos requeridos");
+                return null;
+            }
+
+            return {
+                estudiante_id: parseInt(estudianteId),
+                curso_id,
+                estado,
+            };
+        }).filter(item => item !== null);
+
+        if (asistenciaData.length > 0) {
+            fetch('/api/asistencias', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ asistencias: asistenciaData })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error(text); });
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    toast.success("Asistencias guardadas correctamente");
+                    fetchAsistencias();
+                    setMarcarPendientes(false);  // Desmarcar los estudiantes pendientes después de guardar
+                })
+                .catch(error => toast.error("Error al guardar asistencias: " + error.message));
         }
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setLoading(true);
+    const renderEstudiantes = () => {
+        const estudiantesFiltrados = estudiantesPorCurso();
 
-        const method = editMode ? 'PUT' : 'POST';
-        const url = editMode ? `/api/asistencias/${editId}` : '/api/asistencias';
+        return (
+            <div className="list-group mb-4">
+                {estudiantesFiltrados.map(estudiante => {
+                    // Determinamos si el estudiante tiene un estado asignado
+                    const isEstadoAsignado = !!asistenciaEstados[estudiante.estudiante_id]?.estado;
+                    // Determinamos si el estudiante debe marcarse como pendiente
+                    const shouldMarkPending = marcarPendientes && !isEstadoAsignado;
 
-        const updatedForm = {
-            ...form,
-            fecha: new Date().toISOString().split('T')[0],
-        };
-
-        fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updatedForm)
-        })
-            .then(async (response) => {
-                if (!response.ok) throw new Error(await response.text());
-                return response.json();
-            })
-            .then(data => {
-                fetchAsistencias();  // Recargar asistencias después de agregar o editar
-                toast.success(editMode ? "Asistencia actualizada exitosamente" : "Asistencia agregada exitosamente");
-                handleCloseModal();
-            })
-            .catch(error => toast.error("Error al crear o actualizar la asistencia"))
-            .finally(() => setLoading(false));
-    };
-
-    const handleEdit = (asistencia) => {
-        setForm({
-            estudiante_id: asistencia.estudiante_id,
-            curso_id: asistencia.curso_id,
-            fecha: new Date().toISOString().split('T')[0],
-            estado: asistencia.estado,
-            observaciones: asistencia.observaciones || ''
-        });
-        setEditId(asistencia.asistencia_id);
-        setEditMode(true);
-        setShowModal(true);
-    };
-
-    const handleDelete = (id) => {
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "No podrás revertir esto!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar!',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                setLoading(true);
-                fetch(`/api/asistencias/${id}`, { method: 'DELETE' })
-                    .then(() => {
-                        fetchAsistencias();  // Recargar asistencias después de eliminar
-                        toast.success("Asistencia eliminada exitosamente");
-                    })
-                    .catch(() => toast.error("Ocurrió un problema al eliminar la asistencia"))
-                    .finally(() => setLoading(false));
-            }
-        });
-    };
-
-    const handleCloseModal = () => {
-        setShowModal(false);
-        setForm({ estudiante_id: '', curso_id: '', fecha: new Date().toISOString().split('T')[0], estado: 'Presente', observaciones: '' });
-        setEditMode(false);
-        setEditId(null);
-    };
-
-    const getEstudianteNombre = (id) => {
-        const estudiante = estudiantes.find(e => e.estudiante_id === id);
-        return estudiante ? `${estudiante.nombre} ${estudiante.apellido}` : 'Desconocido';
-    };
-
-    const getCursoNombre = (id) => {
-        const curso = cursos.find(c => c.curso_id === id);
-        return curso ? curso.nombre : 'Sin asignar';
+                    return (
+                        <div 
+                            key={estudiante.estudiante_id} 
+                            className={`list-group-item d-flex justify-content-between align-items-center border-light rounded mb-2 shadow-sm ${shouldMarkPending ? 'bg-lightblue' : ''}`}  // Color de fondo azul pálido si no tiene estado
+                            style={{ backgroundColor: shouldMarkPending ? '#b3d9ff' : '' }}  // Azul pálido si no tiene estado asignado
+                        >
+                            <span>{estudiante.nombre} {estudiante.apellido}</span>
+                            <div className="btn-group" role="group">
+                                <button
+                                    type="button"
+                                    className={`btn ${asistenciaEstados[estudiante.estudiante_id]?.estado === 'P' ? 'btn-success' : 'btn-outline-success'}`}
+                                    onClick={() => handleAsistenciaChange(estudiante, 'P')}
+                                >
+                                    Presente
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`btn ${asistenciaEstados[estudiante.estudiante_id]?.estado === 'A' ? 'btn-danger' : 'btn-outline-danger'}`}
+                                    onClick={() => handleAsistenciaChange(estudiante, 'A')}
+                                >
+                                    Ausente
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`btn ${asistenciaEstados[estudiante.estudiante_id]?.estado === 'T' ? 'btn-warning' : 'btn-outline-warning'}`}
+                                    onClick={() => handleAsistenciaChange(estudiante, 'T')}
+                                >
+                                    Tarde
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        );
     };
 
     return (
-        <div className="container">
-            <button className="btn btn-primary mt-4 mb-4" onClick={() => setShowModal(true)}>Agregar Asistencia</button>
+        <div className="container mt-5">
+            <h2 className="text-center mb-4">Gestión de Asistencias</h2>
 
-            {loading && <div className="alert alert-info">Cargando...</div>}
-
-            <table className="table table-hover table-bordered">
-                <thead className="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Estudiante</th>
-                        <th>Curso</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {asistencias.map(asistencia => (
-                        <tr key={asistencia.asistencia_id}>
-                            <td>{asistencia.asistencia_id}</td>
-                            <td>{getEstudianteNombre(asistencia.estudiante_id)}</td>
-                            <td>{getCursoNombre(asistencia.curso_id)}</td>
-                            <td>{editMode && asistencia.asistencia_id === editId ? new Date().toLocaleString() : new Date(asistencia.created_at).toLocaleString()}</td>
-                            <td>{asistencia.estado}</td>
-                            <td>
-                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(asistencia)}>Editar</button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(asistencia.asistencia_id)}>Eliminar</button>
-                            </td>
-                        </tr>
+            {/* Selector de Cursos */}
+            <div className="mb-4">
+                <label htmlFor="cursoSelect" className="form-label">Seleccionar Curso:</label>
+                <select
+                    id="cursoSelect"
+                    className="form-select"
+                    onChange={handleCursoChange}
+                    value={selectedCurso || ''}
+                >
+                    <option value="">Seleccione un Curso</option>
+                    {cursos.map(curso => (
+                        <option key={curso.curso_id} value={curso.curso_id}>
+                            {curso.nombre}
+                        </option>
                     ))}
-                </tbody>
-            </table>
+                </select>
+            </div>
 
-            {showModal && (
-                <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title">{editMode ? 'Editar Asistencia' : 'Agregar Asistencia'}</h5>
-                                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
-                            </div>
-                            <form onSubmit={handleSubmit}>
-                                <div className="modal-body">
-                                    <div className="mb-3">
-                                        <label className="form-label">Estudiante</label>
-                                        <select name="estudiante_id" className="form-select" value={form.estudiante_id} onChange={handleChange} required>
-                                            <option value="">Seleccione un estudiante</option>
-                                            {estudiantes.map(estudiante => (
-                                                <option key={estudiante.estudiante_id} value={estudiante.estudiante_id}>
-                                                    {estudiante.nombre} {estudiante.apellido}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Curso</label>
-                                        <input type="text" className="form-control" value={getCursoNombre(form.curso_id)} readOnly />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Fecha</label>
-                                        <input type="date" name="fecha" className="form-control" value={form.fecha} onChange={handleChange} />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Estado</label>
-                                        <select name="estado" className="form-select" value={form.estado} onChange={handleChange} required>
-                                            <option value="Presente">Presente</option>
-                                            <option value="Ausente">Ausente</option>
-                                            <option value="Tarde">Tarde</option>
-                                        </select>
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Observaciones</label>
-                                        <textarea name="observaciones" className="form-control" value={form.observaciones} onChange={handleChange}></textarea>
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Cerrar</button>
-                                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                                        {editMode ? 'Actualizar Asistencia' : 'Agregar Asistencia'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+            {/* Selección de Estado de Asistencia para Todos los Estudiantes */}
+            {selectedCurso && (
+                <div className="mb-4">
+                    <button
+                        type="button"
+                        className="btn btn-success me-2"
+                        onClick={() => handleSeleccionarEstado('P')}
+                    >
+                        Marcar Todos como Presentes
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-danger me-2"
+                        onClick={() => handleSeleccionarEstado('A')}
+                    >
+                        Marcar Todos como Ausentes
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-warning me-2"
+                        onClick={() => handleSeleccionarEstado('T')}
+                    >
+                        Marcar Todos como Tarde
+                    </button>
+                </div>
+            )}
+
+            {/* Mostrar Estudiantes por Curso */}
+            {selectedCurso && (
+                <div className="row">
+                    <div className="col-12">
+                        {renderEstudiantes()}
                     </div>
                 </div>
             )}
+
+            {/* Botón para Guardar Asistencia */}
+            <div className="text-center">
+                <button className="btn btn-primary mb-4" onClick={handleGuardarAsistencia}>
+                    Guardar Asistencia
+                </button>
+            </div>
 
             <ToastContainer />
         </div>

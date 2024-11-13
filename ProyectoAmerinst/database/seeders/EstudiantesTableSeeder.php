@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class EstudiantesTableSeeder extends Seeder
 {
@@ -12,31 +13,18 @@ class EstudiantesTableSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('estudiantes')->insert([
-            [
-                'nombre' => 'Luis',
-                'apellido' => 'Ramirez',
-                'fecha_nacimiento' => '2010-05-12',
-                'curso_id' => 1,  // Asocia al curso con color Rojo (Primero)
+        $faker = Faker::create(); // Utilizando Faker para generar datos falsos
+
+        // Creamos 30 estudiantes
+        for ($i = 0; $i < 30; $i++) {
+            DB::table('estudiantes')->insert([
+                'nombre' => $faker->firstName,  // Genera un nombre falso
+                'apellido' => $faker->lastName, // Genera un apellido falso
+                'fecha_nacimiento' => $faker->date('Y-m-d', '2005-01-01'), // Fecha de nacimiento aleatoria
+                'curso_id' => rand(1, 3),  // Asocia al curso con un valor aleatorio entre 1 y 3
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-            [
-                'nombre' => 'Ana',
-                'apellido' => 'Fernandez',
-                'fecha_nacimiento' => '2011-08-20',
-                'curso_id' => 2,  // Asocia al curso con color Verde (Segundo)
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'nombre' => 'Pedro',
-                'apellido' => 'Gomez',
-                'fecha_nacimiento' => '2012-03-15',
-                'curso_id' => 3,  // Asocia al curso con color Azul (Tercero)
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        ]);
+            ]);
+        }
     }
 }
