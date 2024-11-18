@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class NotasTableSeeder extends Seeder
 {
@@ -12,34 +13,30 @@ class NotasTableSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('notas')->insert([
-            [
-                'estudiante_id' => 1,    // ID del estudiante 'Luis Ramirez'
-                'curso_id' => 1,         // ID del curso 'Rojo' (Primero)
-                'materia_id' => 1,       // ID de la materia 'Matemáticas'
-                'maestro_id' => 2,       // ID del maestro 'Maria Garcia'
-                'nota' => 8.5,
-                'fecha' => '2024-05-15',
-                'observaciones' => 'Buen desempeño',
-            ],
-            [
-                'estudiante_id' => 2,    // ID del estudiante 'Ana Fernandez'
-                'curso_id' => 2,         // ID del curso 'Verde' (Segundo)
-                'materia_id' => 2,       // ID de la materia 'Ciencias Naturales'
-                'maestro_id' => 2,       // ID del maestro 'Maria Garcia'
-                'nota' => 7.3,
-                'fecha' => '2024-05-16',
-                'observaciones' => 'Necesita mejorar en práctica',
-            ],
-            [
-                'estudiante_id' => 3,    // ID del estudiante 'Pedro Gomez'
-                'curso_id' => 3,         // ID del curso 'Azul' (Tercero)
-                'materia_id' => 3,       // ID de la materia 'Historia'
-                'maestro_id' => 3,       // ID del maestro 'Carlos Lopez'
-                'nota' => 9.2,
-                'fecha' => '2024-05-17',
-                'observaciones' => 'Excelente comprensión',
-            ]
-        ]);
+        $faker = Faker::create();
+
+        // Obtener datos válidos de las tablas relacionadas
+        $estudiantes = DB::table('estudiantes')->pluck('estudiante_id')->toArray();
+        $cursos = DB::table('cursos')->pluck('curso_id')->toArray();
+        $materias = DB::table('materias')->pluck('materia_id')->toArray();
+        $maestros = DB::table('usuarios')->where('rol_id', 2)->pluck('user_id')->toArray(); // Asumiendo que rol_id 2 es maestro
+
+        $data = [];
+
+        for ($i = 1; $i <= 300; $i++) { // Generar 100 registros
+            $data[] = [
+                'estudiante_id' => $faker->randomElement($estudiantes),
+                'curso_id' => $faker->randomElement($cursos),
+                'materia_id' => $faker->randomElement($materias),
+                'maestro_id' => $faker->randomElement($maestros),
+                'nota' => $faker->randomFloat(2, 1, 10), // Nota entre 0 y 10
+                'tipo' => $faker->randomElement(['tarea', 'examen']),
+                'bimestre' => $faker->numberBetween(1, 4), // Bimestre entre 1 y 4
+                'observaciones' => $faker->optional()->sentence(), // Opcional
+
+            ];
+        }
+
+        DB::table('notas')->insert($data);
     }
 }

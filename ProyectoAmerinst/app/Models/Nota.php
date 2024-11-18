@@ -52,4 +52,20 @@ class Nota extends Model
     {
         return $this->belongsTo(Usuario::class, 'maestro_id', 'user_id');
     }
+
+    // Método para validar tipo y bimestre
+    public static function validate($data)
+    {
+        return validator($data, [
+            'estudiante_id' => 'required|integer|exists:estudiantes,estudiante_id',
+            'curso_id' => 'required|integer|exists:cursos,curso_id',
+            'materia_id' => 'required|integer|exists:materias,materia_id',
+            'maestro_id' => 'required|integer|exists:usuarios,user_id',
+            'nota' => 'required|numeric|min:0|max:10',
+            'tipo' => 'required|string|in:' . implode(',', self::TIPOS),
+            'bimestre' => 'required|integer|in:' . implode(',', self::BIMESTRES),
+            'fecha' => 'required|date',
+            'observaciones' => 'nullable|string',
+        ]);
+    }
 }

@@ -26,6 +26,35 @@ class EstudianteController extends Controller
         return view('estudiantes', compact('estudiantes'));
     }
 
+    public function getEstudiantesRelacionados($padreId)
+    {
+        try {
+            // Recuperar estudiantes relacionados con el padre
+            $estudiantes = Estudiante::whereHas('padres', function ($query) use ($padreId) {
+                $query->where('usuarios.user_id', $padreId);
+            })->select('estudiante_id', 'nombre', 'apellido', 'curso_id')->get(); // Seleccionar solo columnas necesarias
+    
+            if ($estudiantes->isEmpty()) {
+                return response()->json(['message' => 'No hay estudiantes relacionados.'], 404);
+            }
+    
+            return response()->json($estudiantes, 200);
+        } catch (\Exception $e) {
+            // Registrar el error en los logs
+            \Log::error('Error al obtener estudiantes relacionados: ' . $e->getMessage());
+    
+            return response()->json([
+                'message' => 'Error al obtener estudiantes relacionados.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+
+
+
+
+
     // Crear un nuevo estudiante
     public function store(Request $request)
     {

@@ -41,4 +41,10 @@ class Estudiante extends Model
     {
         return $this->hasMany(Notificacion::class, 'estudiante_id', 'estudiante_id');
     }
+
+    public function padres()
+{
+    return $this->belongsToMany(Usuario::class, 'estudiante_padre', 'estudiante_id', 'padre_id');
+}
+
 }

@@ -1,8 +1,10 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class AsistenciasTableSeeder extends Seeder
 {
@@ -11,28 +13,24 @@ class AsistenciasTableSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('asistencias')->insert([
-            [
-                'estudiante_id' => 1,    // ID del estudiante 'Luis Ramirez'
-                'curso_id' => 1,         // ID del curso 'Rojo' (Primero)
-                'estado' => 'P',         // 'P' para Presente
+        $faker = Faker::create();
+        $data = [];
+
+        // Generar 100 registros de asistencias
+        for ($i = 1; $i <= 100; $i++) {
+            $data[] = [
+                'estudiante_id' => $faker->numberBetween(1, 30), // ID de estudiantes existentes
+                'curso_id' => $faker->numberBetween(1, 3), // ID de cursos existentes
+                'estado' => $faker->randomElement(['P', 'A', 'T']), // P = Presente, A = Ausente, T = Tarde
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-            [
-                'estudiante_id' => 2,    // ID del estudiante 'Ana Fernandez'
-                'curso_id' => 2,         // ID del curso 'Verde' (Segundo)
-                'estado' => 'A',         // 'A' para Ausente
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'estudiante_id' => 3,    // ID del estudiante 'Pedro Gomez'
-                'curso_id' => 3,         // ID del curso 'Azul' (Tercero)
-                'estado' => 'T',         // 'T' para Tarde
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        ]);
+            ];
+        }
+
+        // Insertar los datos generados en la tabla 'asistencias'
+        DB::table('asistencias')->insert($data);
+
+        // Mostrar mensaje en consola al finalizar el seeder
+        $this->command->info('Asistencias generadas exitosamente.');
     }
 }

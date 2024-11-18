@@ -11,15 +11,16 @@ class NotaController extends Controller
 {
     // Obtener todas las notas
     public function apiIndex()
-{
-    try {
-        $notas = Nota::with(['estudiante', 'curso', 'materia', 'maestro'])->get();
-        return response()->json($notas, 200);
-    } catch (\Exception $e) {
-        Log::error('Error al obtener notas: ' . $e->getMessage());
-        return response()->json(['message' => 'Error interno al obtener las notas'], 500);
+    {
+        try {
+            $notas = Nota::all(); // Recupera todas las notas
+            return response()->json($notas, 200);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener notas: ' . $e->getMessage());
+            return response()->json(['message' => 'Error interno al obtener las notas'], 500);
+        }
     }
-}
+
 
 
 
@@ -63,6 +64,52 @@ public function bulkSave(Request $request)
         return response()->json(['message' => 'Error al guardar las notas.'], 500);
     }
 }
+public function getNotas(Request $request)
+{
+    try {
+        // Validar que se reciba un arreglo de IDs de estudiantes
+        $validatedData = $request->validate([
+            'estudiantes_ids' => 'required|array|min:1',
+            'estudiantes_ids.*' => 'integer|exists:estudiantes,estudiante_id',
+        ]);
+
+        // Recuperar las notas de los estudiantes proporcionados, incluyendo materia_id, materia_nombre, bimestre y tipo
+        $notas = Nota::whereIn('estudiante_id', $validatedData['estudiantes_ids'])
+            ->join('materias', 'notas.materia_id', '=', 'materias.materia_id') // Join para obtener la materia
+            ->get([
+                'notas.estudiante_id', // ID del estudiante
+                'notas.nota',          // Nota
+                'notas.materia_id',    // materia_id
+                'materias.nombre as materia_nombre', // Nombre de la materia
+                'notas.bimestre',      // Bimestre
+                'notas.tipo'           // Tipo (Tarea o Examen)
+            ]); 
+
+        if ($notas->isEmpty()) {
+            return response()->json(['message' => 'No se encontraron notas relacionadas.'], 404);
+        }
+
+        return response()->json($notas, 200);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'message' => 'Error de validación.',
+            'errors' => $e->errors(),
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Ocurrió un error al obtener las notas.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+
+
+
+
+
+
+
 
 
 

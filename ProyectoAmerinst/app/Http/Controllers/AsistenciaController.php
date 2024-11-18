@@ -27,6 +27,26 @@ class AsistenciaController extends Controller
         return view('asistencias');
     }
 
+    public function getAsistencias(Request $request)
+    {
+        // Log para verificar datos entrantes
+        \Log::info('Datos recibidos para getAsistencias:', $request->all());
+    
+        $validatedData = $request->validate([
+            'estudiantes_ids' => 'required|array|min:1',
+            'estudiantes_ids.*' => 'integer|exists:estudiantes,estudiante_id',
+        ]);
+    
+        $asistencias = Asistencia::whereIn('estudiante_id', $validatedData['estudiantes_ids'])->get();
+    
+        return response()->json($asistencias, 200);
+    }
+    
+
+    
+
+
+
     // Obtener asistencias por estudiante, curso y mes específico
     public function obtenerAsistenciasPorEstudianteYMes(Request $request)
     {

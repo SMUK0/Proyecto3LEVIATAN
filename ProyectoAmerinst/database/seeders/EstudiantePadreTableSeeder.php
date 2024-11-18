@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class EstudiantePadreTableSeeder extends Seeder
 {
@@ -12,19 +13,37 @@ class EstudiantePadreTableSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('estudiante_padre')->insert([
-            [
-                'estudiante_id' => 1,  // ID del estudiante 'Luis Ramirez'
-                'padre_id' => 3,       // ID del usuario 'Carlos Lopez'
-            ],
-            [
-                'estudiante_id' => 2,  // ID del estudiante 'Ana Fernandez'
-                'padre_id' => 2,       // ID del usuario 'Maria Garcia'
-            ],
-            [
-                'estudiante_id' => 3,  // ID del estudiante 'Pedro Gomez'
-                'padre_id' => 1,       // ID del usuario 'Juan Perez'
-            ]
-        ]);
+        $faker = Faker::create();
+
+        // Obtener los IDs existentes de estudiantes y padres
+        $estudiantesIds = DB::table('estudiantes')->pluck('estudiante_id')->toArray();
+        $padresIds = DB::table('usuarios')->where('rol_id', 3)->pluck('user_id')->toArray(); // Filtrar padres por rol_id
+
+        if (empty($estudiantesIds) || empty($padresIds)) {
+            throw new \Exception('No hay estudiantes o padres en la base de datos para generar relaciones.');
+        }
+
+        $data = [];
+        $relacionesUnicas = []; // Usaremos este array para verificar duplicados
+
+        // Generar 30 relaciones únicas aleatorias
+        while (count($data) < 30) {
+            $estudianteId = $faker->randomElement($estudiantesIds);
+            $padreId = $faker->randomElement($padresIds);
+
+            $relacion = "$estudianteId-$padreId"; // Crear una clave única
+
+            // Solo agrega la relación si no existe ya
+            if (!isset($relacionesUnicas[$relacion])) {
+                $data[] = [
+                    'estudiante_id' => $estudianteId,
+                    'padre_id' => $padreId,
+                ];
+                $relacionesUnicas[$relacion] = true; // Marca la relación como usada
+            }
+        }
+
+        // Insertar las relaciones generadas
+        DB::table('estudiante_padre')->insert($data);
     }
 }

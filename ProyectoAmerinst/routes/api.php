@@ -81,6 +81,14 @@ Route::get('/estudiantes/filtrados', [NotificacionController::class, 'estudiante
 Route::post('/notas/bulk-save', [NotaController::class, 'bulkSave']);
 Route::get('/cursos/usuario/{id}', [CursoController::class, 'getCursosPorUsuario']);
 
+Route::get('/estudiantes/relacionados/{userId}', [EstudianteController::class, 'getEstudiantesRelacionados']);
+
+Route::post('/api/notas', [NotaController::class, 'getNotas']);
+Route::post('/api/asistencias', [AsistenciaController::class, 'getAsistencias']);
+Route::post('/notas', [NotaController::class, 'getNotas']);
+
+
+
 /* Estudiante-Padres */
 Route::get('/estudiante-padres', [EstudiantePadresController::class, 'apiIndex']);
 Route::post('/estudiante-padres',[EstudiantePadresController::class, 'store']);
