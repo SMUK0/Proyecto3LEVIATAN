@@ -31,8 +31,9 @@ class Curso extends Model
     }
 
     public function maestros()
-    {
-        return $this->belongsToMany(Usuario::class, 'maestro_curso', 'curso_id', 'user_id');
-    }
+{
+    return $this->belongsToMany(Usuario::class, 'maestro_curso', 'curso_id', 'maestro_id');
+}
+
     
 }

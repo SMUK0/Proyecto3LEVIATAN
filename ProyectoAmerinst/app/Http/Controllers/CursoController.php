@@ -22,6 +22,28 @@ class CursoController extends Controller
         return view('cursos', compact('cursos'));
     }
 
+    public function getCursosPorUsuario($id)
+{
+    try {
+        // Obtener los cursos asociados al maestro (usuario logueado)
+        $cursos = Curso::whereHas('maestros', function ($query) use ($id) {
+            $query->where('maestro_id', $id); // Referencia correcta a 'maestro_id'
+        })->get();
+
+        return response()->json($cursos, 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error al obtener los cursos',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+
+
+
+
     // Crear un nuevo curso
     public function store(Request $request)
     {

@@ -78,6 +78,8 @@ Route::delete('/maestro-cursos/{maestro_id}/{curso_id}', [MaestroCursosControlle
 
 
 Route::get('/estudiantes/filtrados', [NotificacionController::class, 'estudiantesPorMaestro']);
+Route::post('/notas/bulk-save', [NotaController::class, 'bulkSave']);
+Route::get('/cursos/usuario/{id}', [CursoController::class, 'getCursosPorUsuario']);
 
 /* Estudiante-Padres */
 Route::get('/estudiante-padres', [EstudiantePadresController::class, 'apiIndex']);

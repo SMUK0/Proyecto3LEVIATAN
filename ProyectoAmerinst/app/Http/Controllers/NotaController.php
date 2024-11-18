@@ -11,15 +11,60 @@ class NotaController extends Controller
 {
     // Obtener todas las notas
     public function apiIndex()
-    {
-        try {
-            $notas = Nota::all();
-            return response()->json($notas, 200);
-        } catch (\Exception $e) {
-            Log::error('Error al obtener notas: ' . $e->getMessage());
-            return response()->json(['message' => 'Error interno al obtener las notas'], 500);
-        }
+{
+    try {
+        $notas = Nota::with(['estudiante', 'curso', 'materia', 'maestro'])->get();
+        return response()->json($notas, 200);
+    } catch (\Exception $e) {
+        Log::error('Error al obtener notas: ' . $e->getMessage());
+        return response()->json(['message' => 'Error interno al obtener las notas'], 500);
     }
+}
+
+
+
+public function bulkSave(Request $request)
+{
+    try {
+        $data = $request->validate([
+            '*.estudiante_id' => 'required|exists:estudiantes,estudiante_id',
+            '*.curso_id' => 'required|exists:cursos,curso_id',
+            '*.materia_id' => 'required|exists:materias,materia_id',
+            '*.maestro_id' => 'required|exists:usuarios,user_id',
+            '*.nota' => 'required|numeric|min:0|max:10',
+            '*.tipo' => 'required|string|in:tarea,examen',
+            '*.bimestre' => 'required|integer|min:1|max:4',
+        ]);
+
+        foreach ($data as $notaData) {
+            // Condiciones para encontrar una nota existente
+            $existingNota = Nota::where([
+                ['estudiante_id', $notaData['estudiante_id']],
+                ['curso_id', $notaData['curso_id']],
+                ['materia_id', $notaData['materia_id']],
+                ['bimestre', $notaData['bimestre']],
+                ['tipo', $notaData['tipo']]
+            ])->first();
+
+            if ($existingNota) {
+                // Si existe, actualiza
+                Log::info("Actualizando Nota", ['id' => $existingNota->id, 'nueva_data' => $notaData]);
+                $existingNota->update(['nota' => $notaData['nota']]);
+            } else {
+                // Si no existe, crea una nueva
+                Log::info("Creando nueva Nota", $notaData);
+                Nota::create($notaData);
+            }
+        }
+
+        return response()->json(['message' => 'Notas guardadas correctamente.'], 200);
+    } catch (\Exception $e) {
+        Log::error('Error al guardar notas: ' . $e->getMessage());
+        return response()->json(['message' => 'Error al guardar las notas.'], 500);
+    }
+}
+
+
 
     // Mostrar la vista HTML
     public function index()

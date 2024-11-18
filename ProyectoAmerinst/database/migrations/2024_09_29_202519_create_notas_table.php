@@ -10,23 +10,26 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('notas', function (Blueprint $table) {
-            $table->id('nota_id');
-            $table->unsignedBigInteger('estudiante_id');
-            $table->unsignedBigInteger('curso_id');
-            $table->unsignedBigInteger('materia_id');
-            $table->unsignedBigInteger('maestro_id');
-        
-            $table->foreign('estudiante_id')->references('estudiante_id')->on('estudiantes')->onDelete('cascade');
-            $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
-            $table->foreign('materia_id')->references('materia_id')->on('materias')->onDelete('cascade');
-            $table->foreign('maestro_id')->references('user_id')->on('usuarios')->onDelete('cascade');
-            $table->decimal('nota', 5, 2)->check('nota >= 0 AND nota <= 10');
-            $table->date('fecha');
-            $table->text('observaciones')->nullable();
-        });
-    }
+{
+    Schema::create('notas', function (Blueprint $table) {
+        $table->id('nota_id');
+        $table->unsignedBigInteger('estudiante_id');
+        $table->unsignedBigInteger('curso_id');
+        $table->unsignedBigInteger('materia_id');
+        $table->unsignedBigInteger('maestro_id');
+        $table->decimal('nota', 5, 2)->check('nota >= 0 AND nota <= 10');
+        $table->string('tipo', 20)->default('tarea');
+        $table->unsignedTinyInteger('bimestre')->default(1);
+        $table->date('fecha')->default(now()); // Establece un valor predeterminado
+        $table->text('observaciones')->nullable();
+
+        $table->foreign('estudiante_id')->references('estudiante_id')->on('estudiantes')->onDelete('cascade');
+        $table->foreign('curso_id')->references('curso_id')->on('cursos')->onDelete('cascade');
+        $table->foreign('materia_id')->references('materia_id')->on('materias')->onDelete('cascade');
+        $table->foreign('maestro_id')->references('user_id')->on('usuarios')->onDelete('cascade');
+    });
+}
+
 
     /**
      * Reverse the migrations.

@@ -12,13 +12,27 @@ const AsistenciasApp = () => {
     const [selectedCurso, setSelectedCurso] = useState(null);
     const [estadoSeleccionado, setEstadoSeleccionado] = useState('');
     const [marcarPendientes, setMarcarPendientes] = useState(false); // Nuevo estado para marcar estudiantes pendientes
+    const [userId, setUserId] = useState(null); // ID del usuario logueado
 
+    // Obtener el usuario logueado al cargar el componente
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user')); // Suponiendo que está en localStorage
+        if (user && user.user_id) {
+            setUserId(user.user_id);
+            console.log(`Usuario logueado ID: ${user.user_id}`); // Depuración
+            fetchCursosUsuario(user.user_id); // Llamar a la función para obtener cursos
+        } else {
+            toast.error("No se encontró información del usuario logueado.");
+        }
+    }, []);
+
+    // Cargar estudiantes y asistencias al inicializar
     useEffect(() => {
         fetchEstudiantes();
         fetchAsistencias();
-        fetchCursos();
     }, []);
 
+    // Obtener estudiantes
     const fetchEstudiantes = () => {
         fetch('/api/estudiantes')
             .then(response => response.json())
@@ -26,6 +40,7 @@ const AsistenciasApp = () => {
             .catch(() => toast.error("Error al cargar estudiantes"));
     };
 
+    // Obtener asistencias
     const fetchAsistencias = () => {
         fetch('/api/asistencias')
             .then(response => response.json())
@@ -33,11 +48,18 @@ const AsistenciasApp = () => {
             .catch(() => toast.error("Error al cargar asistencias"));
     };
 
-    const fetchCursos = () => {
-        fetch('/api/cursos')
-            .then(response => response.json())
-            .then(data => setCursos(data))
-            .catch(() => toast.error("Error al cargar cursos"));
+    // Obtener cursos relacionados al usuario logueado
+    const fetchCursosUsuario = async (userId) => {
+        try {
+            const response = await fetch(`/api/cursos/usuario/${userId}`);
+            if (!response.ok) throw new Error('Error al cargar los cursos');
+            const data = await response.json();
+            console.log('Cursos relacionados:', data); // Mostrar cursos en consola
+            setCursos(data);
+        } catch (error) {
+            console.error('Error al obtener los cursos:', error);
+            toast.error('No se pudieron cargar los cursos');
+        }
     };
 
     const handleAsistenciaChange = (estudiante, estado) => {
@@ -79,7 +101,6 @@ const AsistenciasApp = () => {
     };
 
     const handleGuardarAsistencia = () => {
-        // Verificar que todos los estudiantes del curso seleccionado tengan un estado
         const estudiantesFiltrados = estudiantesPorCurso();
 
         for (let estudiante of estudiantesFiltrados) {
@@ -90,21 +111,14 @@ const AsistenciasApp = () => {
             }
         }
 
-        // Si todos los estudiantes tienen estado, proceder a guardar
         const asistenciaData = Object.keys(asistenciaEstados).map(estudianteId => {
             const { estado, curso_id } = asistenciaEstados[estudianteId];
-
-            if (!estado || !curso_id) {
-                toast.error("Faltan datos requeridos");
-                return null;
-            }
-
             return {
                 estudiante_id: parseInt(estudianteId),
                 curso_id,
                 estado,
             };
-        }).filter(item => item !== null);
+        });
 
         if (asistenciaData.length > 0) {
             fetch('/api/asistencias', {
@@ -133,16 +147,14 @@ const AsistenciasApp = () => {
         return (
             <div className="list-group mb-4">
                 {estudiantesFiltrados.map(estudiante => {
-                    // Determinamos si el estudiante tiene un estado asignado
                     const isEstadoAsignado = !!asistenciaEstados[estudiante.estudiante_id]?.estado;
-                    // Determinamos si el estudiante debe marcarse como pendiente
                     const shouldMarkPending = marcarPendientes && !isEstadoAsignado;
 
                     return (
                         <div 
                             key={estudiante.estudiante_id} 
-                            className={`list-group-item d-flex justify-content-between align-items-center border-light rounded mb-2 shadow-sm ${shouldMarkPending ? 'bg-lightblue' : ''}`}  // Color de fondo azul pálido si no tiene estado
-                            style={{ backgroundColor: shouldMarkPending ? '#b3d9ff' : '' }}  // Azul pálido si no tiene estado asignado
+                            className={`list-group-item d-flex justify-content-between align-items-center ${shouldMarkPending ? 'bg-lightblue' : ''}`}
+                            style={{ backgroundColor: shouldMarkPending ? '#b3d9ff' : '' }}
                         >
                             <span>{estudiante.nombre} {estudiante.apellido}</span>
                             <div className="btn-group" role="group">
@@ -178,8 +190,6 @@ const AsistenciasApp = () => {
     return (
         <div className="container mt-5">
             <h2 className="text-center mb-4">Gestión de Asistencias</h2>
-
-            {/* Selector de Cursos */}
             <div className="mb-4">
                 <label htmlFor="cursoSelect" className="form-label">Seleccionar Curso:</label>
                 <select
@@ -197,7 +207,6 @@ const AsistenciasApp = () => {
                 </select>
             </div>
 
-            {/* Selección de Estado de Asistencia para Todos los Estudiantes */}
             {selectedCurso && (
                 <div className="mb-4">
                     <button
@@ -224,16 +233,8 @@ const AsistenciasApp = () => {
                 </div>
             )}
 
-            {/* Mostrar Estudiantes por Curso */}
-            {selectedCurso && (
-                <div className="row">
-                    <div className="col-12">
-                        {renderEstudiantes()}
-                    </div>
-                </div>
-            )}
+            {selectedCurso && <div className="row">{renderEstudiantes()}</div>}
 
-            {/* Botón para Guardar Asistencia */}
             <div className="text-center">
                 <button className="btn btn-primary mb-4" onClick={handleGuardarAsistencia}>
                     Guardar Asistencia
@@ -243,15 +244,6 @@ const AsistenciasApp = () => {
             <ToastContainer />
         </div>
     );
-};
-
-window.onload = () => {
-    const rootElement = document.getElementById('crud-asistencias');
-    if (rootElement) {
-        ReactDOM.createRoot(rootElement).render(<AsistenciasApp />);
-    } else {
-        console.error("No se encontró el contenedor con id 'crud-asistencias'");
-    }
 };
 
 export default AsistenciasApp;
