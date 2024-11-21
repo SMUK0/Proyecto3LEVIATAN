@@ -4,20 +4,39 @@ import AsistenciasApp from './asistenciasapp.jsx';
 import NotasApp from './notasapp.jsx';
 import NotificacionesApp from './notificacionesapp.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faBars, faSignOutAlt, faClipboardCheck, faFileAlt, faBell, faChalkboardTeacher } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faArrowLeft, faArrowRight, faSignOutAlt, faClipboardCheck, faFileAlt, faBell, faChalkboardTeacher } from '@fortawesome/free-solid-svg-icons';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
+// Paleta de colores
+const colors = {
+  primary: '#007bff', // Azul brillante para elementos interactivos
+  secondary: '#f8f9fa', // Fondo claro
+  backgroundDark: '#343a40', // Fondo oscuro
+  textLight: '#ffffff', // Texto en claro
+  textDark: '#212529', // Texto en oscuro
+  buttonHover: '#0056b3', // Hover de botones
+  dropdown: '#f1f1f1', // Fondo del menú desplegable
+  error: '#dc3545', // Rojo de error
+};
 
 const ViewMaestro = () => {
     const [activeComponent, setActiveComponent] = useState('');
     const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [user, setUser] = useState(null);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
 
-    // Alternar el menú
+    useEffect(() => {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (userData && userData.rol_id === 2) { 
+            setUser(userData);
+        } else {
+            window.location.href = '/login';
+        }
+    }, []);
+
     const toggleMenu = () => setIsMenuCollapsed(!isMenuCollapsed);
 
-    // Cerrar sesión y redirigir
     const handleLogout = () => {
         fetch('/api/logout', {
             method: 'POST',
@@ -37,20 +56,13 @@ const ViewMaestro = () => {
         .catch(error => console.error('Error al cerrar sesión:', error));
     };
 
-    // Alternar el menú desplegable del perfil
     const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
-    // Validación de usuario y rol
-    useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem('user'));
-        if (userData && userData.rol_id === 2) { 
-            setUser(userData);
-        } else {
-            window.location.href = '/login';
-        }
-    }, []);
+    // Función para volver a la vista principal
+    const goBackToHome = () => {
+        setActiveComponent('');
+    };
 
-    // Renderizar el componente activo seleccionado
     const renderComponent = () => {
         switch (activeComponent) {
             case 'asistencias':
@@ -61,35 +73,60 @@ const ViewMaestro = () => {
                 return <NotificacionesApp />;
             default:
                 return (
-                    <div className="text-center mt-5">
-                            <h4>¡Bienvenido al panel de Maestro {user ? `${user.nombre} ${user.apellido}` : 'Administrador'}!</h4>
-                            <p>Seleccione una opción del menú para comenzar.</p>
+                    <div className="text-center mt-5 p-4" style={{
+                        backgroundColor: colors.primary,
+                        color: colors.textLight,
+                        borderRadius: '10px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    }}>
+                        <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>
+                            ¡Bienvenido al panel de Maestro {user ? `${user.nombre} ${user.apellido}` : 'Administrador'}!
+                        </h2>
+                        <p style={{ fontSize: '1.25rem', marginTop: '20px' }}>
+                            Selecciona una opción en el menú para comenzar.
+                        </p>
                     </div>
                 );
         }
     };
 
     return (
-        <div className="d-flex">
+        <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: colors.secondary }}>
             {/* Menú lateral */}
-            <div className={`bg-primary text-white p-3 ${isMenuCollapsed ? 'collapsed-menu' : 'expanded-menu'}`} style={{ height: '100vh', transition: 'width 0.3s' }}>
+            <div className={`bg-dark text-white p-3 ${isMenuCollapsed ? 'collapsed-menu' : 'expanded-menu'}`} style={{
+                width: isMenuCollapsed ? '80px' : '250px',
+                height: '100vh',
+                transition: 'width 0.3s ease',
+                overflow: 'hidden',
+            }}>
                 <div className="text-center mb-3">
-                    <button className="btn btn-outline-light" onClick={toggleMenu}>
-                        <FontAwesomeIcon icon={faBars} />
+                    <button className="btn btn-outline-light" onClick={toggleMenu} style={{ padding: '10px' }}>
+                        <FontAwesomeIcon icon={isMenuCollapsed ? faArrowRight : faArrowLeft} />
                     </button>
                 </div>
                 {!isMenuCollapsed && (
                     <div className="menu-options">
-                        <h5 className="text-center mb-4">Menú Maestro</h5>
+                        <h5 className="text-center mb-4">Menú</h5>
                         <ul className="nav flex-column">
                             {[{ label: 'Asistencias', value: 'asistencias', icon: faClipboardCheck },
                               { label: 'Notas', value: 'notas', icon: faFileAlt },
                               { label: 'Notificaciones', value: 'notificaciones', icon: faBell }
                             ].map((item) => (
-                                <li key={item.value} className="nav-item mb-2">
-                                    <button className="btn btn-outline-light w-100 d-flex align-items-center" onClick={() => setActiveComponent(item.value)}>
-                                        <FontAwesomeIcon icon={item.icon} className="me-2" />
-                                        {item.label}
+                                <li key={item.value} className="nav-item mb-3">
+                                    <button className="btn btn-outline-light w-100 d-flex align-items-center justify-content-center" 
+                                            onClick={() => setActiveComponent(item.value)} 
+                                            style={{
+                                                fontSize: '1.2rem', // Aumento del tamaño de la fuente
+                                                padding: '12px',
+                                                transition: 'background-color 0.3s ease',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                            }}
+                                            onMouseEnter={(e) => e.target.style.backgroundColor = colors.primary}
+                                            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                                    >
+                                        <FontAwesomeIcon icon={item.icon} className="me-3" style={{ fontSize: '1.5rem' }} /> {/* Aumento del tamaño del icono */}
+                                        <span className="w-100 text-center">{item.label}</span>
                                     </button>
                                 </li>
                             ))}
@@ -102,18 +139,49 @@ const ViewMaestro = () => {
             <div className="flex-grow-1">
                 <header className="navbar navbar-expand-lg navbar-light bg-light shadow-sm px-3">
                     <div className="container-fluid">
-                        <span className="navbar-brand">
+                        <span className="navbar-brand" 
+                            style={{
+                                color: colors.primary,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                fontSize: '1.5rem',
+                                transition: 'transform 0.3s ease, color 0.3s ease',
+                            }}
+                            onClick={goBackToHome} // Llamada a la función que vuelve a la vista principal
+                            onMouseEnter={(e) => {
+                                e.target.style.transform = 'scale(1.1)';
+                                e.target.style.color = '#0056b3';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.transform = 'scale(1)';
+                                e.target.style.color = colors.primary;
+                            }}
+                        >
                             <FontAwesomeIcon icon={faChalkboardTeacher} className="me-2" />
                             Panel Maestro
                         </span>
                         <div ref={dropdownRef} className="ml-auto d-flex align-items-center">
-                            <FontAwesomeIcon icon={faUser} size="lg" className="me-2" onClick={toggleDropdown} />
+                            <FontAwesomeIcon icon={faUser} size="lg" className="me-2" onClick={toggleDropdown} style={{
+                                cursor: 'pointer',
+                                borderRadius: '50%',
+                                border: '3px solid black',
+                                padding: '7px',
+                                backgroundColor: '#fff',
+                                transition: 'transform 0.3s ease',
+                            }} />
                             {isDropdownOpen && (
-                                <div className="dropdown-menu dropdown-menu-right show position-absolute" style={{ top: '40px', right: '10px' }}>
+                                <div className="dropdown-menu dropdown-menu-right show position-absolute" style={{
+                                    top: '40px', 
+                                    right: '10px', 
+                                    backgroundColor: colors.dropdown,
+                                    borderRadius: '8px',
+                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                }}>
                                     {user && (
                                         <div className="px-3 py-2">
                                             <p className="mb-1 fw-bold">{user.nombre} {user.apellido}</p>
-                                            <p className="mb-2 text-muted">Rol: Maestro</p>
+                                            <p className="mb-2 text-muted">Maestro</p>
                                         </div>
                                     )}
                                     <button className="dropdown-item text-danger" onClick={handleLogout}>
@@ -125,8 +193,12 @@ const ViewMaestro = () => {
                     </div>
                 </header>
 
-                {/* Renderización del componente seleccionado */}
-                <div className="p-4">
+                {/* Contenido de la vista */}
+                <div className="p-4" style={{
+                    backgroundColor: colors.secondary,
+                    height: 'calc(100vh - 80px)', 
+                    overflowY: 'auto'
+                }}>
                     {renderComponent()}
                 </div>
             </div>
@@ -134,7 +206,7 @@ const ViewMaestro = () => {
     );
 };
 
-// Montaje manual para pruebas del componente ViewMaestro
+// Montaje manual para pruebas del maestro
 window.onload = () => {
     const rootElement = document.getElementById('app');
     if (rootElement) {

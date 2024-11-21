@@ -118,15 +118,15 @@ const EstadisticasEstudiantes = () => {
         }
 
         console.log('Entrenando modelo...');
-        const maxBimestre = 4; // Normalizar bimestres (1-4)
-        const maxMateria = materias.length; // Normalizar materia_id según el número de materias
+        const maxBimestre = 4;
+        const maxMateria = materias.length;
         const datosEntrenamiento = [];
         const etiquetas = [];
 
         notas.forEach((nota) => {
             datosEntrenamiento.push([
-                nota.bimestre / maxBimestre, // Normalizado
-                nota.materia_id / maxMateria, // Normalizado
+                nota.bimestre / maxBimestre,
+                nota.materia_id / maxMateria,
             ]);
             etiquetas.push(clasificarRendimiento(parseFloat(nota.nota)));
         });
@@ -140,10 +140,10 @@ const EstadisticasEstudiantes = () => {
         const modelo = tf.sequential();
         modelo.add(tf.layers.dense({ units: 32, activation: 'relu', inputShape: [2] }));
         modelo.add(tf.layers.dense({ units: 16, activation: 'relu' }));
-        modelo.add(tf.layers.dense({ units: 3, activation: 'softmax' })); // 3 clases
+        modelo.add(tf.layers.dense({ units: 3, activation: 'softmax' }));
 
         modelo.compile({
-            optimizer: tf.train.adam(0.01), // Reducir el learning rate
+            optimizer: tf.train.adam(0.01),
             loss: 'sparseCategoricalCrossentropy',
             metrics: ['accuracy'],
         });
@@ -159,9 +159,9 @@ const EstadisticasEstudiantes = () => {
     };
 
     const clasificarRendimiento = (nota) => {
-        if (nota >= 8) return 0; // Alto rendimiento
-        if (nota >= 5) return 1; // Rendimiento medio
-        return 2; // Bajo rendimiento
+        if (nota >= 8) return 0;
+        if (nota >= 5) return 1;
+        return 2;
     };
 
     const predecirRendimiento = (bimestre, materia_id) => {
@@ -170,12 +170,44 @@ const EstadisticasEstudiantes = () => {
             return null;
         }
         const tensorEntrada = tf.tensor2d([
-            [bimestre / 4, materia_id / materias.length], // Normalizado
+            [bimestre / 4, materia_id / materias.length],
         ]);
         const prediccion = modelo.predict(tensorEntrada);
         const probabilidades = prediccion.arraySync()[0];
         const clase = prediccion.argMax(1).dataSync()[0];
         return { clase, probabilidades };
+    };
+
+    const generarMensajesPersonalizados = () => {
+        if (!modelo) {
+            console.error('El modelo no está entrenado. No se pueden generar mensajes personalizados.');
+            toast.error('El modelo no está entrenado. No se pueden generar mensajes personalizados.');
+            return;
+        }
+
+        console.log('Generando mensajes personalizados...');
+
+        const mensajes = estudiantes.map((estudiante) => {
+            const predicciones = notas
+                .filter((nota) => nota.estudiante_id === estudiante.estudiante_id)
+                .map((nota) => {
+                    const prediccion = predecirRendimiento(nota.bimestre, nota.materia_id);
+                    return { ...nota, prediccion: prediccion.clase };
+                });
+
+            const altoRendimiento = predicciones.filter((p) => p.prediccion === 0).length;
+            const medioRendimiento = predicciones.filter((p) => p.prediccion === 1).length;
+            const bajoRendimiento = predicciones.filter((p) => p.prediccion === 2).length;
+
+            const mensaje = `Estudiante: ${estudiante.nombre} | Alto Rendimiento: ${altoRendimiento}, Rendimiento Medio: ${medioRendimiento}, Bajo Rendimiento: ${bajoRendimiento}.`;
+            console.log('Mensaje generado:', mensaje);
+
+            return mensaje;
+        });
+
+        mensajes.forEach((mensaje) => {
+            toast.info(mensaje);
+        });
     };
 
     const generarEstadisticas = () => {
@@ -184,44 +216,28 @@ const EstadisticasEstudiantes = () => {
             toast.error('El modelo no está entrenado. No se pueden generar estadísticas.');
             return;
         }
-    
+
         console.log('Generando estadísticas basadas en el modelo...');
         const estadisticasPorMateria = materias.map((materia) => {
             const notasFiltradas = notas.filter((nota) => nota.materia_id === materia.materia_id);
-    
-            console.log(`Procesando materia: ${materia.nombre}`);
-            console.log('Notas filtradas:', notasFiltradas);
-    
+
             const resultados = estudiantes.map((estudiante) => {
                 const notasEstudiante = notasFiltradas.filter(
                     (nota) => nota.estudiante_id === estudiante.estudiante_id
                 );
-    
+
                 const predicciones = notasEstudiante.map((nota) => {
                     const prediccion = predecirRendimiento(nota.bimestre, nota.materia_id);
-                    console.log(
-                        `Predicción para "${estudiante.nombre}" en "${materia.nombre}":`,
-                        prediccion
-                    );
-                    return prediccion.clase; // Clase predicha (0, 1, 2)
+                    return prediccion.clase;
                 });
-    
-                // Conteos por clase de rendimiento
+
                 const altoRendimiento = predicciones.filter((prediccion) => prediccion === 0).length;
                 const medioRendimiento = predicciones.filter((prediccion) => prediccion === 1).length;
                 const bajoRendimiento = predicciones.filter((prediccion) => prediccion === 2).length;
-    
-                console.log(`Resultados del estudiante "${estudiante.nombre}" en "${materia.nombre}":`, {
-                    altoRendimiento,
-                    medioRendimiento,
-                    bajoRendimiento,
-                });
-    
+
                 return { altoRendimiento, medioRendimiento, bajoRendimiento };
             });
-    
-            console.log(`Resultados finales para la materia "${materia.nombre}":`, resultados);
-    
+
             return {
                 materia: materia.nombre,
                 estadisticas: {
@@ -249,12 +265,9 @@ const EstadisticasEstudiantes = () => {
                 },
             };
         });
-    
+
         setEstadisticas(estadisticasPorMateria);
-        console.log('Estadísticas generadas:', estadisticasPorMateria);
     };
-    
-    
 
     if (loading) {
         return <div>Cargando datos...</div>;
@@ -271,6 +284,9 @@ const EstadisticasEstudiantes = () => {
                     </button>
                     <button className="btn btn-primary me-2" onClick={generarEstadisticas}>
                         Generar Estadísticas
+                    </button>
+                    <button className="btn btn-secondary me-2" onClick={generarMensajesPersonalizados}>
+                        Generar Mensajes Personalizados
                     </button>
                 </div>
             )}

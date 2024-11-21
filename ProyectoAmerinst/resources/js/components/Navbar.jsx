@@ -1,113 +1,139 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faMoon, faBars } from '@fortawesome/free-solid-svg-icons';
-import { Link } from 'react-router-dom';
+import { faSun, faMoon, faBars, faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 
+// Animación para el cambio de tamaño y sombra en el botón de cambio de modo
+const ButtonHoverAnimation = keyframes`
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+`;
+
+// Animación para el botón de inicio de sesión (cambio de tamaño y color de fondo)
+const LoginButtonHoverAnimation = keyframes`
+  0% {
+    transform: scale(1);
+    background-color: ${({ darkMode }) => (darkMode ? '#f47573' : '#870e20')};
+  }
+  50% {
+    transform: scale(1.05);
+    background-color: ${({ darkMode }) => (darkMode ? '#ff6f61' : '#a22835')};
+  }
+  100% {
+    transform: scale(1);
+    background-color: ${({ darkMode }) => (darkMode ? '#f47573' : '#870e20')};
+  }
+`;
 
 // Contenedor principal del Navbar
 const NavbarContainer = styled.nav`
-  background-color: ${({ darkMode }) => (darkMode ? '#1a1a1a' : '#a22835')};
+  background: ${({ darkMode }) =>
+    darkMode
+      ? 'linear-gradient(135deg, rgba(33, 33, 33, 0.8), rgba(34, 34, 34, 0.7))' // Color de fondo para dark mode
+      : 'linear-gradient(135deg, rgba(135, 14, 32, 0.8), rgba(135, 14, 32, 0.8))'};  // Rojo oscuro
   color: white;
-  padding: 10px 20px;
+  padding: 20px 30px;
   display: flex;
-  justify-content: space-between; /* Ajusta la alineación */
+  justify-content: space-between;
   align-items: center;
   transition: background-color 0.3s ease;
   position: sticky;
   top: 0;
   z-index: 1000;
+  backdrop-filter: blur(10px); /* Fondo translúcido */
+  border-bottom: 2px solid ${({ darkMode }) => (darkMode ? '#444' : '#f56c56')}; /* Rojo claro */
 `;
 
 // Contenedor del logo
 const Logo = styled.div`
-  font-size: 1.5rem;
+  font-size: 3rem;
   font-weight: bold;
   display: flex;
   align-items: center;
   color: white;
+  transition: font-size 0.3s ease;
 
   img {
-    height: 40px;
-    margin-right: 10px;
+    height: 80px;
+    margin-right: 20px;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover {
+    font-size: 3.5rem;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+  }
+
+  &:hover img {
+    transform: scale(1.1);
   }
 `;
 
-// Contenedor para el switch y el menú hamburguesa en pantallas pequeñas
+// Contenedor de botones derecho
 const RightMenu = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px; /* Añade espacio entre el switch y el menú hamburguesa */
-
-  @media (min-width: 769px) {
-    justify-content: flex-end;
-  }
+  gap: 25px;
 `;
 
-// Lista de navegación
-const NavLinks = styled.ul`
-  list-style: none;
+// Botón de cambio de modo oscuro/claro con animación al hacer hover
+const ToggleButton = styled.button`
+  background-color: ${({ darkMode }) => (darkMode ? '#f47573' : '#870e20')}; /* Rojo claro */
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  margin: 0;
-
-  @media (max-width: 768px) {
-    display: ${({ isOpen }) => (isOpen ? 'flex' : 'none')};
-    flex-direction: column;
-    position: absolute;
-    top: 60px;
-    right: 0;
-    background-color: ${({ darkMode }) => (darkMode ? '#1e1e1e' : '#b2283a')}; /* Color diferenciado */
-    width: 200px;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 1001;
-  }
-`;
-
-// Estilo para los enlaces del Navbar
-const NavItem = styled.li`
-  margin: 0 15px;
-  a {
-    text-decoration: none;
-    color: white;
-    font-size: 1rem;
-    transition: color 0.3s ease;
-
-    &:hover {
-      color: ${({ darkMode }) => (darkMode ? '#f47573' : '#f9f9f9')};
-    }
-  }
-
-  @media (max-width: 768px) {
-    margin: 10px 0;
-    a {
-      color: ${({ darkMode }) => (darkMode ? '#f47573' : '#f9f9f9')};
-    }
-  }
-`;
-
-// Estilo para los botones Sign In y Sign Up
-const Button = styled.a`
-  background-color: ${({ darkMode, primary }) =>
-    primary ? (darkMode ? '#f47573' : '#870e20') : 'transparent'};
-  color: white;
-  border: ${({ primary }) => (primary ? 'none' : '2px solid white')};
-  padding: 10px 20px;
-  border-radius: 5px;
-  margin-left: 15px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, color 0.3s ease;
-
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  width: 60px;
+  height: 60px;
+  
   &:hover {
-    background-color: ${({ darkMode, primary }) =>
-      primary ? (darkMode ? '#ff6f61' : '#a22835') : (darkMode ? '#333' : '#fff')};
-    color: ${({ primary }) => (primary ? '#fff' : '#870e20')};
+    background-color: ${({ darkMode }) => (darkMode ? '#ff6f61' : '#a22835')}; /* Rojo más claro */
+    animation: ${ButtonHoverAnimation} 0.6s ease-in-out infinite;
   }
 
-  @media (max-width: 768px) {
-    width: 100%; /* Ocupa todo el ancho en pantallas pequeñas */
-    margin: 10px 0;
+  svg {
+    /* No se necesita animación del ícono */
+  }
+`;
+
+// Botón de inicio de sesión con animación al hacer hover
+const LoginButton = styled.a`
+  background-color: ${({ darkMode }) => (darkMode ? '#f47573' : '#870e20')}; /* Rojo claro */
+  color: white;
+  padding: 14px 35px;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  /* Animación cuando el cursor está sobre el botón */
+  &:hover {
+    animation: ${LoginButtonHoverAnimation} 0.6s ease-in-out infinite; /* Animación continua */
+  }
+
+  svg {
+    font-size: 1.8rem; /* Aumentamos el tamaño del ícono */
   }
 `;
 
@@ -123,30 +149,11 @@ const HamburgerButton = styled.div`
   }
 `;
 
-// Contenedor del switch de modo oscuro/claro
-const SwitchContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-
-  @media (min-width: 769px) {
-    margin-left: 15px;
-  }
-`;
-
-// Iconos de sol y luna para el switch
-const Icon = styled(FontAwesomeIcon)`
-  font-size: 1.2rem;
-  color: ${({ darkMode }) => (darkMode ? '#f47573' : '#f9f9f9')};
-`;
-
 const Navbar = ({ darkMode, toggleDarkMode }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Alternar el menú hamburguesa
   const toggleMenu = () => setIsOpen(!isOpen);
-  
 
   return (
     <NavbarContainer darkMode={darkMode}>
@@ -159,30 +166,17 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
         Colegio Amerinst
       </Logo>
 
-      {/* Enlaces de navegación */}
-      <NavLinks isOpen={isOpen} darkMode={darkMode}>
-        <NavItem darkMode={darkMode}>
-          <a href="#history">Historia</a>
-        </NavItem>
-        <NavItem darkMode={darkMode}>
-          <a href="#education">Educación</a>
-        </NavItem>
-        <NavItem darkMode={darkMode}>
-          <a href="#pillars">Pilares</a>
-        </NavItem>
-        <Button darkMode={darkMode} primary href="#sign-up">
-          Sign Up
-        </Button>
-        <Button darkMode={darkMode} href="/login">
-          Sign In
-        </Button>
-      </NavLinks>
-
-      {/* Botón hamburguesa + Switch modo oscuro */}
+      {/* Enlaces de navegación y botones */}
       <RightMenu>
-        <SwitchContainer onClick={toggleDarkMode}>
-          <Icon icon={darkMode ? faMoon : faSun} darkMode={darkMode} />
-        </SwitchContainer>
+        <ToggleButton darkMode={darkMode} onClick={toggleDarkMode}>
+          <FontAwesomeIcon icon={darkMode ? faMoon : faSun} />
+        </ToggleButton>
+
+        <LoginButton darkMode={darkMode} href="/login">
+          <FontAwesomeIcon icon={faSignInAlt} />
+          Iniciar Sesión
+        </LoginButton>
+
         <HamburgerButton onClick={toggleMenu}>
           <FontAwesomeIcon icon={faBars} />
         </HamburgerButton>
