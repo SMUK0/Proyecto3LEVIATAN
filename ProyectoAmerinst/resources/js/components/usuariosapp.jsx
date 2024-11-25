@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom/client';
 import { ToastContainer, toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -21,7 +20,7 @@ const UsuariosApp = () => {
     const [editId, setEditId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [rolesLoaded, setRolesLoaded] = useState(false); // Estado para verificar si los roles están cargados
+    const [rolesLoaded, setRolesLoaded] = useState(false);
 
     useEffect(() => {
         fetchUsuarios();
@@ -46,17 +45,13 @@ const UsuariosApp = () => {
             })
             .catch(() => toast.error("Error al cargar roles"));
     };
-    
 
-    const palabrasProhibidas = ['groseria1', 'groseria2', 'groseria3']; // Lista de palabras prohibidas
+    const palabrasProhibidas = ['groseria1', 'groseria2', 'groseria3'];
 
     const validateForm = () => {
         const newErrors = {};
-
-        // Función para detectar caracteres repetidos
         const esCaracterRepetido = (valor) => /^(.)\1*$/.test(valor);
 
-        // Validación de nombre
         if (!form.nombre.trim()) {
             newErrors.nombre = 'El nombre es obligatorio';
         } else if (!/^[a-zA-Z\s]+$/.test(form.nombre)) {
@@ -67,7 +62,6 @@ const UsuariosApp = () => {
             newErrors.nombre = 'El nombre no puede contener un solo carácter repetido';
         }
 
-        // Validación de apellido
         if (!form.apellido.trim()) {
             newErrors.apellido = 'El apellido es obligatorio';
         } else if (!/^[a-zA-Z\s]+$/.test(form.apellido)) {
@@ -78,14 +72,12 @@ const UsuariosApp = () => {
             newErrors.apellido = 'El apellido no puede contener un solo carácter repetido';
         }
 
-        // Validación de email
         if (!form.email.trim()) {
             newErrors.email = 'El correo electrónico es obligatorio';
         } else if (!/\S+@\S+\.\S+/.test(form.email)) {
             newErrors.email = 'El formato del correo es inválido';
         }
 
-        // Validación de contraseña (opcional según modo)
         const passwordPattern = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$/;
         if (!editMode && !form.password.trim()) {
             newErrors.password = 'La contraseña es obligatoria';
@@ -93,7 +85,6 @@ const UsuariosApp = () => {
             newErrors.password = 'La contraseña debe incluir mayúscula, número, carácter especial y al menos 8 caracteres';
         }
 
-        // Validación de rol
         if (!form.rol_id) newErrors.rol_id = 'El rol es obligatorio';
 
         setErrors(newErrors);
@@ -132,20 +123,20 @@ const UsuariosApp = () => {
         })
             .then(response => response.ok ? response.json() : Promise.reject())
             .then(() => {
-                fetchUsuarios(); // Volver a cargar usuarios después de guardar
+                fetchUsuarios(); 
                 toast.success(editMode ? 'Usuario actualizado' : 'Usuario agregado');
-                setShowModal(false);
-                setEditMode(false);
-                setEditId(null);
-                setForm({ nombre: '', apellido: '', email: '', password: '', rol_id: '' });
-                setErrors({});
+                resetForm();  // Restablece el formulario después de guardar
             })
             .catch(() => toast.error('Error en la operación'))
             .finally(() => setLoading(false));
     };
-    
 
     const handleDelete = (id) => {
+        if (id === 1) {
+            toast.error('La eliminacion de este usuario no esta permitida.!');
+            return; // Salir de la función sin hacer nada si el ID es 1
+        }
+
         Swal.fire({
             title: '¿Estás seguro?',
             text: "No podrás revertir esto!",
@@ -169,96 +160,151 @@ const UsuariosApp = () => {
         setShowModal(true);
     };
 
+    const resetForm = () => {
+        setForm({ nombre: '', apellido: '', email: '', password: '', rol_id: '' });
+        setEditMode(false);
+        setEditId(null);
+        setErrors({});
+        setShowModal(false);
+    };
+
     const obtenerNombreRol = (rol_id) => {
-        if (!roles || roles.length === 0) return 'Cargando...'; // Indica que los roles están cargando
+        if (!roles || roles.length === 0) return 'Cargando...';
         const rol = roles.find(r => r.rol_id === rol_id);
         return rol ? rol.nombre : 'Sin rol';
     };
 
     return (
         <div className="container">
+            <h2 className="mt-4 mb-4">Gestión de Usuarios</h2>
             {loading && <div className="alert alert-info">Cargando datos...</div>}
-            <button className="btn btn-primary mt-4 mb-4" onClick={() => setShowModal(true)} disabled={!rolesLoaded}>Agregar Usuario</button>
+
+            <button className="btn btn-primary mt-4 mb-4" onClick={() => setShowModal(true)} disabled={!rolesLoaded}>
+                Agregar Usuario
+            </button>
 
             <table className="table table-hover table-bordered">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Nombre y Apellido</th>
-                        <th>Email</th>
-                        <th>Rol</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {usuarios.map(usuario => (
-                        <tr key={usuario.user_id}>
-                            <td>{usuario.nombre} {usuario.apellido}</td>
-                            <td>{usuario.email}</td>
-                            <td>{obtenerNombreRol(usuario.rol_id)}</td>
-                            <td>
-                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(usuario)}>Editar</button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(usuario.user_id)}>Eliminar</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+    <thead className="table-dark">
+        <tr>
+            <th className="text-center" style={{ width: '25%' }}>Nombre del Usuario</th>
+            <th className="text-center" style={{ width: '30%' }}>Correo Electrónico</th>
+            <th className="text-center" style={{ width: '25%' }}>Rol</th>
+            <th className="text-center" style={{ width: '20%' }}>Acciones</th> {/* Ajustado con porcentaje */}
+        </tr>
+    </thead>
+    <tbody>
+        {usuarios.map(usuario => (
+            <tr key={usuario.user_id}>
+                <td>{usuario.nombre} {usuario.apellido}</td>
+                <td>{usuario.email}</td>
+                <td>{obtenerNombreRol(usuario.rol_id)}</td>
+                <td className="text-center" style={{ width: '200px' }}> {/* Ajuste de ancho en píxeles */}
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(usuario)}>
+                        Editar
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(usuario.user_id)}>
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+        ))}
+    </tbody>
+</table>
 
-            {showModal && rolesLoaded && (
-                <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+
+
+            {showModal && (
+                <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1" aria-labelledby="modalLabel" aria-hidden="true">
                     <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">{editMode ? 'Editar Usuario' : 'Agregar Usuario'}</h5>
-                                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+                                <button type="button" className="btn-close" onClick={resetForm}></button>
                             </div>
-                            <form onSubmit={handleSubmit}>
-                                <div className="modal-body">
+                            <div className="modal-body">
+                                <form onSubmit={handleSubmit}>
                                     <div className="mb-3">
-                                        <label className="form-label">Nombre</label>
-                                        <input name="nombre" className="form-control" value={form.nombre} onChange={handleChange} required />
-                                        {errors.nombre && <div className="text-danger">{errors.nombre}</div>}
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Apellido</label>
-                                        <input name="apellido" className="form-control" value={form.apellido} onChange={handleChange} required />
-                                        {errors.apellido && <div className="text-danger">{errors.apellido}</div>}
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Email</label>
-                                        <input name="email" className="form-control" value={form.email} onChange={handleChange} required readOnly={editMode} />
-                                        {errors.email && <div className="text-danger">{errors.email}</div>}
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="form-label">Contraseña</label>
+                                        <label htmlFor="nombre" className="form-label">Nombre</label>
                                         <input
-                                            name="password"
+                                            type="text"
+                                            className="form-control"
+                                            id="nombre"
+                                            name="nombre"
+                                            value={form.nombre}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        {errors.nombre && <small className="text-danger">{errors.nombre}</small>}
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label htmlFor="apellido" className="form-label">Apellido</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="apellido"
+                                            name="apellido"
+                                            value={form.apellido}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        {errors.apellido && <small className="text-danger">{errors.apellido}</small>}
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label htmlFor="email" className="form-label">Correo Electrónico</label>
+                                        <input
+                                            type="email"
+                                            className="form-control"
+                                            id="email"
+                                            name="email"
+                                            value={form.email}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        {errors.email && <small className="text-danger">{errors.email}</small>}
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label htmlFor="password" className="form-label">Contraseña</label>
+                                        <input
                                             type="password"
                                             className="form-control"
+                                            id="password"
+                                            name="password"
                                             value={form.password}
                                             onChange={handleChange}
                                             required={!editMode}
                                         />
-                                        {errors.password && <div className="text-danger">{errors.password}</div>}
+                                        {errors.password && <small className="text-danger">{errors.password}</small>}
                                     </div>
+
                                     <div className="mb-3">
-                                        <label className="form-label">Rol</label>
-                                        <select name="rol_id" className="form-select" value={form.rol_id} onChange={handleChange} required>
+                                        <label htmlFor="rol_id" className="form-label">Rol</label>
+                                        <select
+                                            className="form-control"
+                                            id="rol_id"
+                                            name="rol_id"
+                                            value={form.rol_id}
+                                            onChange={handleChange}
+                                            required
+                                        >
                                             <option value="">Selecciona un rol</option>
                                             {roles.map((rol) => (
-                                                <option key={rol.rol_id} value={rol.rol_id}>{rol.nombre}</option>
+                                                <option key={rol.rol_id} value={rol.rol_id}>
+                                                    {rol.nombre}
+                                                </option>
                                             ))}
                                         </select>
-                                        {errors.rol_id && <div className="text-danger">{errors.rol_id}</div>}
+                                        {errors.rol_id && <small className="text-danger">{errors.rol_id}</small>}
                                     </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cerrar</button>
-                                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                                        {editMode ? 'Actualizar Usuario' : 'Agregar Usuario'}
-                                    </button>
-                                </div>
-                            </form>
+
+                                    <div className="modal-footer">
+                                        <button type="button" className="btn btn-secondary" onClick={resetForm}>Cancelar</button>
+                                        <button type="submit" className="btn btn-primary">{editMode ? 'Guardar Cambios' : 'Agregar Usuario'}</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -267,13 +313,6 @@ const UsuariosApp = () => {
             <ToastContainer />
         </div>
     );
-};
-
-window.onload = () => {
-    const rootElement = document.getElementById('crud-usuario');
-    if (rootElement) {
-        ReactDOM.createRoot(rootElement).render(<UsuariosApp />);
-    }
 };
 
 export default UsuariosApp;

@@ -192,7 +192,6 @@ const App = () => {
       <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       <PageWrapper darkMode={darkMode}>
         <WelcomeMessageContainer darkMode={darkMode}>
-          <FontAwesomeIcon icon={faUser} />
           ¡Bienvenidos al Instituto Americano! Estamos comprometidos con tu futuro.
         </WelcomeMessageContainer>
 
@@ -222,20 +221,20 @@ const App = () => {
         <div className="footer-content">
           <div className="footer-column">
             <h4>Instituto Americano</h4>
-            <p>&copy; 2024 Instituto Americano La Paz Bolivia</p>
+            <p>&copy; 2024 Instituto Americano La Paz Bolivia - LEVIATAN</p>
             <p>Av. 20 de octubre N°1928 - Teléfono: 7021-29492</p>
             <a href="https://amerinst.edu.bo/" target="_blank" rel="noopener noreferrer">Visita nuestra página web!</a>
           </div>
           <div className="footer-column">
             <h4>Conéctate</h4>
             <div className="social-icons">
-              <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.facebook.com/profile.php?id=61564139076612" target="_blank" rel="noopener noreferrer">
                 <FontAwesomeIcon icon={faFacebook} />
               </a>
-              <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://x.com/BandaAmerinst" target="_blank" rel="noopener noreferrer">
                 <FontAwesomeIcon icon={faTwitter} />
               </a>
-              <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.instagram.com/seleccion_amerinst/" target="_blank" rel="noopener noreferrer">
                 <FontAwesomeIcon icon={faInstagram} />
               </a>
             </div>

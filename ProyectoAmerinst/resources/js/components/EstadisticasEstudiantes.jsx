@@ -184,31 +184,38 @@ const EstadisticasEstudiantes = () => {
             toast.error('El modelo no está entrenado. No se pueden generar mensajes personalizados.');
             return;
         }
-
-        console.log('Generando mensajes personalizados...');
-
-        const mensajes = estudiantes.map((estudiante) => {
+    
+        console.log('Generando mensajes personalizados para los padres...');
+    
+        estudiantes.forEach((estudiante) => {
             const predicciones = notas
                 .filter((nota) => nota.estudiante_id === estudiante.estudiante_id)
                 .map((nota) => {
                     const prediccion = predecirRendimiento(nota.bimestre, nota.materia_id);
                     return { ...nota, prediccion: prediccion.clase };
                 });
-
+    
             const altoRendimiento = predicciones.filter((p) => p.prediccion === 0).length;
             const medioRendimiento = predicciones.filter((p) => p.prediccion === 1).length;
             const bajoRendimiento = predicciones.filter((p) => p.prediccion === 2).length;
-
-            const mensaje = `Estudiante: ${estudiante.nombre} | Alto Rendimiento: ${altoRendimiento}, Rendimiento Medio: ${medioRendimiento}, Bajo Rendimiento: ${bajoRendimiento}.`;
+    
+            let mensaje = `Estimados padres de ${estudiante.nombre}, `;
+            if (altoRendimiento > medioRendimiento && altoRendimiento > bajoRendimiento) {
+                mensaje += `nos complace informarles que su hijo/a está destacando con un rendimiento alto en ${altoRendimiento} pruebas de rendimiento generadas por el sistema. Su esfuerzo y dedicación son dignos de reconocimiento. ¡Felicitaciones! 👏`;
+            } else if (medioRendimiento > altoRendimiento && medioRendimiento > bajoRendimiento) {
+                mensaje += `su hijo/a está mostrando un buen desempeño con rendimiento medio en ${medioRendimiento} pruebas de rendimiento generadas por el sistema. Con su apoyo en casa, puede alcanzar un nivel de excelencia. 💪`;
+            } else if (bajoRendimiento > altoRendimiento && bajoRendimiento > medioRendimiento) {
+                mensaje += `queremos compartirles que su hijo/a tiene desafíos en ${bajoRendimiento} pruebas de rendimiento generadas por el sistema. Esto es una oportunidad para trabajar juntos en estrategias de mejora. Estamos aquí para apoyarlos en este proceso. 🌟`;
+            } else {
+                mensaje += `el desempeño de su hijo/a es variado. Les animamos a seguir fortaleciendo sus logros y a trabajar en las áreas donde hay oportunidades de mejora. ¡Cuenten con nuestro respaldo! 💡`;
+            }
+    
             console.log('Mensaje generado:', mensaje);
-
-            return mensaje;
-        });
-
-        mensajes.forEach((mensaje) => {
             toast.info(mensaje);
         });
     };
+    
+    
 
     const generarEstadisticas = () => {
         if (!modelo) {
@@ -216,28 +223,28 @@ const EstadisticasEstudiantes = () => {
             toast.error('El modelo no está entrenado. No se pueden generar estadísticas.');
             return;
         }
-
+    
         console.log('Generando estadísticas basadas en el modelo...');
         const estadisticasPorMateria = materias.map((materia) => {
             const notasFiltradas = notas.filter((nota) => nota.materia_id === materia.materia_id);
-
+    
             const resultados = estudiantes.map((estudiante) => {
                 const notasEstudiante = notasFiltradas.filter(
                     (nota) => nota.estudiante_id === estudiante.estudiante_id
                 );
-
+    
                 const predicciones = notasEstudiante.map((nota) => {
                     const prediccion = predecirRendimiento(nota.bimestre, nota.materia_id);
                     return prediccion.clase;
                 });
-
+    
                 const altoRendimiento = predicciones.filter((prediccion) => prediccion === 0).length;
                 const medioRendimiento = predicciones.filter((prediccion) => prediccion === 1).length;
                 const bajoRendimiento = predicciones.filter((prediccion) => prediccion === 2).length;
-
+    
                 return { altoRendimiento, medioRendimiento, bajoRendimiento };
             });
-
+    
             return {
                 materia: materia.nombre,
                 estadisticas: {
@@ -265,9 +272,13 @@ const EstadisticasEstudiantes = () => {
                 },
             };
         });
-
+    
         setEstadisticas(estadisticasPorMateria);
+    
+        // Llamar a la generación de mensajes personalizados una vez que se actualicen las estadísticas
+        generarMensajesPersonalizados();
     };
+    
 
     if (loading) {
         return <div>Cargando datos...</div>;
@@ -275,7 +286,7 @@ const EstadisticasEstudiantes = () => {
 
     return (
         <div className="container p-4">
-            <h2 className="text-center mb-4">Estadísticas de Estudiantes</h2>
+            <h2 className="text-center mb-4">Estadísticas de los Estudiantes</h2>
 
             {dataReady && (
                 <div>
@@ -284,9 +295,6 @@ const EstadisticasEstudiantes = () => {
                     </button>
                     <button className="btn btn-primary me-2" onClick={generarEstadisticas}>
                         Generar Estadísticas
-                    </button>
-                    <button className="btn btn-secondary me-2" onClick={generarMensajesPersonalizados}>
-                        Generar Mensajes Personalizados
                     </button>
                 </div>
             )}

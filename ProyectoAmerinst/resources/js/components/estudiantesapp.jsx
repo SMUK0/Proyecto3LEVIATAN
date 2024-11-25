@@ -156,42 +156,49 @@ const EstudiantesApp = () => {
 
     return (
         <div className="container">
-            <button className="btn btn-primary my-4" onClick={handleAdd}>
-                Agregar Estudiante
-            </button>
-
+            <h2 className="mt-4 mb-4">Gestión de Estudiantes</h2>
             {loading && <div className="alert alert-info">Cargando...</div>}
+            <div className="d-flex justify-content my-4">
+                <button className="btn btn-primary" onClick={handleAdd}>
+                    Agregar Estudiante
+                </button>
+            </div>
 
             <table className="table table-hover table-bordered">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Nombre Completo</th>
-                        <th>Edad</th>
-                        <th>Curso</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {estudiantes.map(est => (
-                        <tr key={est.estudiante_id}>
-                            <td>{`${est.nombre} ${est.apellido}`}</td>
-                            <td>{calculateAge(est.fecha_nacimiento)} años</td>
-                            <td>{getNombreGrado(est.curso_id)}</td>
-                            <td>
-                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(est)}>Editar</button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(est.estudiante_id)}>Eliminar</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+    <thead className="table-dark">
+        <tr>
+            <th className="text-center">Nombre del Estudiante</th>
+            <th className="text-center">Edad</th>
+            <th className="text-center">Curso</th>
+            <th className="text-center" style={{ width: '15%' }}>Acciones</th> {/* Ajustar el ancho aquí */}
+        </tr>
+    </thead>
+    <tbody>
+        {estudiantes.map(est => (
+            <tr key={est.estudiante_id}>
+                <td>{`${est.nombre} ${est.apellido}`}</td>
+                <td>{calculateAge(est.fecha_nacimiento)} años</td>
+                <td>{getNombreGrado(est.curso_id)}</td>
+                <td className="text-center">
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(est)}>Editar</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(est.estudiante_id)}>Eliminar</button>
+                </td>
+            </tr>
+        ))}
+    </tbody>
+</table>
+
+
+
+
+
 
             {showModal && (
                 <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
                     <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title">{editMode ? 'Editar Estudiante' : 'Agregar Estudiante'}</h5>
+                                <h5 className="modal-title text-center">{editMode ? 'Editar Estudiante' : 'Agregar Estudiante'}</h5>
                                 <button type="button" className="btn-close" onClick={handleCloseModal}></button>
                             </div>
                             <form onSubmit={handleSubmit}>
@@ -214,7 +221,7 @@ const EstudiantesApp = () => {
                                     <div className="mb-3">
                                         <label className="form-label">Curso</label>
                                         <select name="curso_id" className="form-select" value={form.curso_id} onChange={handleChange}>
-                                            <option value="">Sin asignar</option> {/* Opción para "Sin asignar" */}
+                                            <option value="">Sin asignar</option>
                                             {cursos.map(curso => (
                                                 <option key={curso.curso_id} value={curso.curso_id}>{curso.grado}</option>
                                             ))}
@@ -237,14 +244,6 @@ const EstudiantesApp = () => {
             <ToastContainer />
         </div>
     );
-};
-
-// Montaje manual para pruebas
-window.onload = () => {
-    const rootElement = document.getElementById('crud-estudiante');
-    if (rootElement) {
-        ReactDOM.createRoot(rootElement).render(<EstudiantesApp />);
-    }
 };
 
 export default EstudiantesApp;

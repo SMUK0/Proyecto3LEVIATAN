@@ -140,38 +140,39 @@ const CursosApp = () => {
 
     return (
         <div className="container my-4">
-
+<h2 className="mt-4 mb-4">Gestión de Cursos</h2>
+{loading && <div className="alert alert-info">Cargando...</div>}
             <button className="btn btn-primary mb-3" onClick={handleShowAddForm}>
                 Agregar Curso
             </button>
-
-            {loading && <div className="alert alert-info">Cargando...</div>}
+            
 
             <table className="table table-hover table-bordered">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Grado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {cursos.map(curso => (
-                        <tr key={curso.curso_id}>
-                            <td>{curso.nombre}</td>
-                            <td>{curso.grado}</td>
-                            <td>
-                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(curso)}>
-                                    Editar
-                                </button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(curso.curso_id)}>
-                                    Eliminar
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+    <thead className="table-dark">
+        <tr>
+            <th className="text-center">Nombre del Curso</th>
+            <th className="text-center">Grado</th>
+            <th className="text-center" style={{ width: '15%' }}>Acciones</th> {/* Ajustar el tamaño aquí */}
+        </tr>
+    </thead>
+    <tbody>
+        {cursos.map(curso => (
+            <tr key={curso.curso_id}>
+                <td>{curso.nombre}</td>
+                <td>{curso.grado}</td>
+                <td className="text-center" style={{ width: '15%' }}> {/* Ajuste del tamaño de la columna "Acciones" */}
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(curso)}>
+                        Editar
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(curso.curso_id)}>
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+        ))}
+    </tbody>
+</table>
+
 
             {showModal && (
                 <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>

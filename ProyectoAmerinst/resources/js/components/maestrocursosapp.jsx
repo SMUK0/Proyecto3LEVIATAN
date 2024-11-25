@@ -144,37 +144,40 @@ const MaestroCursosApp = () => {
 
     return (
         <div className="container my-4">
+            <h2 className="mt-4 mb-4">Gestión de asignación de cursos</h2>
+            {loading && <div className="alert alert-info">Cargando...</div>}
             <button className="btn btn-primary mb-3" onClick={handleShowAddForm}>
                 Asignar Curso a Maestro
             </button>
 
-            {loading && <div className="alert alert-info">Cargando...</div>}
+            
 
             <table className="table table-hover table-bordered">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Maestro</th>
-                        <th>Curso</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {maestroCursos.map(mc => (
-                        <tr key={`${mc.maestro_id}-${mc.curso_id}`}>
-                            <td>{getUserName(mc.maestro_id)}</td>
-                            <td>{getCursoName(mc.curso_id)}</td>
-                            <td>
-                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(mc)}>
-                                    Editar
-                                </button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(mc.maestro_id, mc.curso_id)}>
-                                    Eliminar
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+    <thead className="table-dark">
+        <tr>
+            <th className="text-center">Maestro</th>
+            <th className="text-center">Curso</th>
+            <th className="text-center" style={{ width: '15%' }}>Acciones</th> {/* Ancho ajustado */}
+        </tr>
+    </thead>
+    <tbody>
+        {maestroCursos.map(mc => (
+            <tr key={`${mc.maestro_id}-${mc.curso_id}`}>
+                <td>{getUserName(mc.maestro_id)}</td>
+                <td>{getCursoName(mc.curso_id)}</td>
+                <td className="text-center" style={{ width: '15%' }}> {/* Ancho ajustado */}
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(mc)}>
+                        Editar
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(mc.maestro_id, mc.curso_id)}>
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+        ))}
+    </tbody>
+</table>
+
 
             {showModal && (
                 <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>

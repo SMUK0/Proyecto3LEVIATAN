@@ -110,7 +110,6 @@ const ViewMaestro = () => {
                         <ul className="nav flex-column">
                             {[{ label: 'Asistencias', value: 'asistencias', icon: faClipboardCheck },
                               { label: 'Notas', value: 'notas', icon: faFileAlt },
-                              { label: 'Notificaciones', value: 'notificaciones', icon: faBell }
                             ].map((item) => (
                                 <li key={item.value} className="nav-item mb-3">
                                     <button className="btn btn-outline-light w-100 d-flex align-items-center justify-content-center" 

@@ -112,36 +112,38 @@ const MateriasApp = () => {
 
     return (
         <div className="container my-4">
-
+<h2 className="mt-4 mb-4">Gestión de Materias</h2>
+{loading && <div className="alert alert-info">Cargando...</div>}
             <button className="btn btn-primary mb-3" onClick={handleShowAddForm}>
                 Agregar Materia
             </button>
-
-            {loading && <div className="alert alert-info">Cargando...</div>}
+            
 
             <table className="table table-hover table-bordered">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {materias.map(materia => (
-                        <tr key={materia.materia_id}>
-                            <td>{materia.nombre}</td>
-                            <td>
-                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(materia)}>
-                                    Editar
-                                </button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(materia.materia_id)}>
-                                    Eliminar
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+    <thead className="table-dark">
+        <tr>
+            <th className="text-center">Nombre de la Materia</th>
+            <th className="text-center" style={{ width: '20px' }}>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {materias.map(materia => (
+            <tr key={materia.materia_id}>
+                <td>{materia.nombre}</td>
+                <td className="text-center" style={{ width: '200px' }}>
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(materia)}>
+                        Editar
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(materia.materia_id)}>
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+        ))}
+    </tbody>
+</table>
+
+
 
             {showModal && (
                 <div className="modal show fade" style={{ display: 'block', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>

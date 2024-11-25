@@ -148,25 +148,35 @@ const ViewPadre = () => {
       <div className="flex-grow-1">
         <header className="navbar navbar-expand-lg navbar-light bg-light shadow-sm px-3">
           <div className="container-fluid">
-            <span
-              className="navbar-brand d-flex align-items-center"
-              style={{
-                color: colors.primary,
-                cursor: 'pointer',
-                fontSize: '1.5rem',
-              }}
-              onClick={handleGoHome}
-            >
-              <FontAwesomeIcon
-                icon={faHome}
-                className="me-2"
-                style={{
-                  fontSize: '1.8rem',
-                  transition: 'color 0.3s',
-                }}
-              />
-              Panel Padre
-            </span>
+          <span
+  className="navbar-brand d-flex align-items-center"
+  style={{
+    color: colors.primary,
+    cursor: 'pointer',
+    fontSize: '1.5rem',
+    transition: 'transform 0.3s ease, color 0.3s ease', // Agregado para animación
+  }}
+  onClick={handleGoHome}
+  onMouseEnter={(e) => {
+    e.target.style.transform = 'scale(1.1)'; // Aumenta el tamaño del título
+    e.target.style.color = '#0056b3'; // Cambia el color
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.transform = 'scale(1)'; // Restaura el tamaño original
+    e.target.style.color = colors.primary; // Restaura el color original
+  }}
+>
+  <FontAwesomeIcon
+    icon={faHome}
+    className="me-2"
+    style={{
+      fontSize: '1.8rem',
+      transition: 'color 0.3s ease', // Animación suave para el icono
+    }}
+  />
+  Panel Padre
+</span>
+
             <div ref={dropdownRef} className="ml-auto d-flex align-items-center">
               <FontAwesomeIcon
                 icon={faUser}

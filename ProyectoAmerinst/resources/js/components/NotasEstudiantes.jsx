@@ -109,7 +109,7 @@ const NotasEstudiantes = () => {
 
     return (
         <div className="container p-4">
-            <h2 className="text-center mb-4">Estadísticas de Estudiantes y Notas</h2>
+            <h2 className="text-center mb-4">Notas de los Estudiantes</h2>
 
             {/* Dropdown para seleccionar la materia */}
             <div className="form-group mb-4">
