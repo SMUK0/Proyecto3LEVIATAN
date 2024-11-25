@@ -211,7 +211,7 @@ const App = () => {
           <CardSection
             title="Pilares"
             content="Nuestros pilares fundamentales son la excelencia académica, el desarrollo de valores humanos y la innovación educativa. Nos esforzamos por ofrecer una educación que no solo forme profesionales competentes, sino también personas responsables, solidarias y comprometidas con su comunidad."
-            image="https://amerinst.edu.bo/wp-content/uploads/2022/01/19-scaled.jpg"
+            image="https://amerinst.edu.bo/wp-content/uploads/2022/01/GTO_9862-scaled.jpg"
             darkMode={darkMode}
           />
         </CardGrid>
