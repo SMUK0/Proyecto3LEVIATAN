@@ -184,34 +184,32 @@ const UsuariosApp = () => {
             </button>
 
             <table className="table table-hover table-bordered">
-    <thead className="table-dark">
-        <tr>
-            <th className="text-center" style={{ width: '25%' }}>Nombre del Usuario</th>
-            <th className="text-center" style={{ width: '30%' }}>Correo Electrónico</th>
-            <th className="text-center" style={{ width: '25%' }}>Rol</th>
-            <th className="text-center" style={{ width: '20%' }}>Acciones</th> {/* Ajustado con porcentaje */}
-        </tr>
-    </thead>
-    <tbody>
-        {usuarios.map(usuario => (
-            <tr key={usuario.user_id}>
-                <td>{usuario.nombre} {usuario.apellido}</td>
-                <td>{usuario.email}</td>
-                <td>{obtenerNombreRol(usuario.rol_id)}</td>
-                <td className="text-center" style={{ width: '200px' }}> {/* Ajuste de ancho en píxeles */}
-                    <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(usuario)}>
-                        Editar
-                    </button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(usuario.user_id)}>
-                        Eliminar
-                    </button>
-                </td>
-            </tr>
-        ))}
-    </tbody>
-</table>
-
-
+                <thead className="table-dark">
+                    <tr>
+                        <th className="text-center" style={{ width: '25%' }}>Nombre del Usuario</th>
+                        <th className="text-center" style={{ width: '30%' }}>Correo Electrónico</th>
+                        <th className="text-center" style={{ width: '25%' }}>Rol</th>
+                        <th className="text-center" style={{ width: '20%' }}>Acciones</th> {/* Ajustado con porcentaje */}
+                    </tr>
+                </thead>
+                <tbody>
+                    {usuarios.map(usuario => (
+                        <tr key={usuario.user_id}>
+                            <td>{usuario.nombre} {usuario.apellido}</td>
+                            <td>{usuario.email}</td>
+                            <td>{obtenerNombreRol(usuario.rol_id)}</td>
+                            <td className="text-center" style={{ width: '200px' }}> {/* Ajuste de ancho en píxeles */}
+                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(usuario)}>
+                                    Editar
+                                </button>
+                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(usuario.user_id)}>
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
 
             {showModal && (
                 <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1" aria-labelledby="modalLabel" aria-hidden="true">
@@ -288,6 +286,7 @@ const UsuariosApp = () => {
                                             value={form.rol_id}
                                             onChange={handleChange}
                                             required
+                                            disabled={editMode && form.user_id === 1} 
                                         >
                                             <option value="">Selecciona un rol</option>
                                             {roles.map((rol) => (

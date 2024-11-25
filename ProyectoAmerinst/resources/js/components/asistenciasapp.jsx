@@ -201,7 +201,7 @@ const AsistenciasApp = () => {
                     <option value="">Seleccione un Curso</option>
                     {cursos.map(curso => (
                         <option key={curso.curso_id} value={curso.curso_id}>
-                            {curso.nombre}
+                            {`${curso.nombre} - ${curso.grado}`}  {/* Muestra el nombre del curso y el grado */}
                         </option>
                     ))}
                 </select>

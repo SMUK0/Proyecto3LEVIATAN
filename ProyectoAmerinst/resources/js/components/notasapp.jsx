@@ -148,7 +148,7 @@ const NotasApp = () => {
                     <option value="">-- Seleccione un Curso --</option>
                     {cursos.map((curso) => (
                         <option key={curso.curso_id} value={curso.curso_id}>
-                            {curso.nombre}
+                            {`${curso.nombre} - ${curso.grado}`} {/* Aquí agregamos el grado */}
                         </option>
                     ))}
                 </select>
@@ -184,8 +184,8 @@ const NotasApp = () => {
                         value={tipoSeleccionado}
                         onChange={(e) => setTipoSeleccionado(e.target.value)}
                     >
-                        <option value="tarea">Tarea</option>
-                        <option value="examen">Examen</option>
+                        <option value="Tarea">Tarea</option>
+                        <option value="Examen">Examen</option>
                     </select>
                 </div>
             )}
@@ -239,14 +239,12 @@ const NotasApp = () => {
                                             <td>
                                                 <input
                                                     type="number"
-                                                    className="form-control"
-                                                    value={nota ? nota.nota : ''}
-                                                    onChange={(e) =>
-                                                        handleNotaChange(e, est.estudiante_id)
-                                                    }
                                                     min="0"
                                                     max="10"
                                                     step="0.1"
+                                                    value={nota ? nota.nota : ''}
+                                                    onChange={(e) => handleNotaChange(e, est.estudiante_id)}
+                                                    className="form-control"
                                                 />
                                             </td>
                                         </tr>
@@ -254,12 +252,9 @@ const NotasApp = () => {
                                 })}
                         </tbody>
                     </table>
+                    <button className="btn btn-primary" onClick={handleSave}>Guardar Notas</button>
                 </div>
             )}
-
-            <button className="btn btn-success" onClick={handleSave} disabled={loading}>
-                Guardar Notas
-            </button>
 
             <ToastContainer />
         </div>
