@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import AsistenciasApp from './asistenciasapp.jsx';
 import NotasApp from './notasapp.jsx';
-import NotificacionesApp from './notificacionesapp.jsx';
+import VerNotasApp from './VerNotasApp.jsx'; 
+import VerAsistenciasApp from './VerAsistenciasApp.jsx';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faArrowLeft, faArrowRight, faSignOutAlt, faClipboardCheck, faFileAlt, faBell, faChalkboardTeacher } from '@fortawesome/free-solid-svg-icons';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -69,8 +71,10 @@ const ViewMaestro = () => {
                 return <AsistenciasApp />;
             case 'notas':
                 return <NotasApp />;
-            case 'notificaciones':
-                return <NotificacionesApp />;
+            case 'vernotas':
+                return <VerNotasApp />;
+            case 'verasistencias':
+                return <VerAsistenciasApp />;
             default:
                 return (
                     <div className="text-center mt-5 p-4" style={{
@@ -110,6 +114,9 @@ const ViewMaestro = () => {
                         <ul className="nav flex-column">
                             {[{ label: 'Asistencias', value: 'asistencias', icon: faClipboardCheck },
                               { label: 'Notas', value: 'notas', icon: faFileAlt },
+                              { label: 'Ver Notas', value: 'vernotas', icon: faBell },
+                              { label: 'Ver Asistencias', value: 'verasistencias', icon: faBell }, 
+ 
                             ].map((item) => (
                                 <li key={item.value} className="nav-item mb-3">
                                     <button className="btn btn-outline-light w-100 d-flex align-items-center justify-content-center" 

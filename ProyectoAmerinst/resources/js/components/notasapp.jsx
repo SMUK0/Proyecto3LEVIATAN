@@ -11,7 +11,7 @@ const NotasApp = () => {
     const [notas, setNotas] = useState([]);
     const [cursoSeleccionado, setCursoSeleccionado] = useState(null);
     const [materiaSeleccionada, setMateriaSeleccionada] = useState(null);
-    const [tipoSeleccionado, setTipoSeleccionado] = useState('tarea'); // "tarea" por defecto
+    const [tipoSeleccionado, setTipoSeleccionado] = useState('Tarea'); // "tarea" por defecto
     const [bimestreSeleccionado, setBimestreSeleccionado] = useState(1); // Primer bimestre por defecto
     const [loading, setLoading] = useState(false);
     const [userId, setUserId] = useState(null); // Para almacenar el ID del usuario logueado
@@ -84,12 +84,13 @@ const NotasApp = () => {
                     estudiante_id: estudianteId,
                     materia_id: materiaSeleccionada,
                     curso_id: cursoSeleccionado,
-                    tipo: tipoSeleccionado,
+                    tipo: tipoSeleccionado, // Aquí debería ser "Examen" cuando corresponda
                     bimestre: bimestreSeleccionado,
                     nota: notaValue,
-                    maestro_id: userId, // Incluye el maestro_id del usuario logueado
-                    fecha: new Date().toISOString().split('T')[0], // Incluye la fecha actual
+                    maestro_id: userId,
+                    fecha: new Date().toISOString().split('T')[0],
                 });
+                
             }
 
             return updatedNotas;
@@ -102,14 +103,16 @@ const NotasApp = () => {
             nota.materia_id === materiaSeleccionada &&
             nota.tipo === tipoSeleccionado &&
             nota.bimestre === bimestreSeleccionado &&
-            nota.maestro_id === userId // Asegúrate de que maestro_id esté incluido
+            nota.maestro_id === userId
         );
-
+    
+        console.log("Notas enviadas al servidor:", notasFiltradas);
+    
         if (notasFiltradas.length === 0) {
             toast.error("No hay notas para guardar.");
             return;
         }
-
+    
         setLoading(true);
         try {
             const response = await fetch('/api/notas/bulk-save', {
@@ -119,7 +122,6 @@ const NotasApp = () => {
             });
             if (!response.ok) throw new Error('Error al guardar notas');
             toast.success('Notas guardadas exitosamente');
-            // Recarga las notas desde el servidor
             fetchData('/api/notas', setNotas, 'Error al cargar notas');
         } catch (error) {
             toast.error(error.message);
@@ -127,11 +129,11 @@ const NotasApp = () => {
             setLoading(false);
         }
     };
+    
 
     return (
         <div className="container mt-4">
             <h3 className="mb-4">Gestión de Notas</h3>
-            <p><strong>ID del Usuario Logueado:</strong> {userId}</p>
 
             {/* Selector de curso */}
             <div className="mb-4">
@@ -179,14 +181,15 @@ const NotasApp = () => {
                 <div className="mb-4">
                     <label htmlFor="tipo-select" className="form-label">Tipo de Nota</label>
                     <select
-                        id="tipo-select"
-                        className="form-select"
-                        value={tipoSeleccionado}
-                        onChange={(e) => setTipoSeleccionado(e.target.value)}
-                    >
-                        <option value="Tarea">Tarea</option>
-                        <option value="Examen">Examen</option>
-                    </select>
+    id="tipo-select"
+    className="form-select"
+    value={tipoSeleccionado}
+    onChange={(e) => setTipoSeleccionado(e.target.value)}
+>
+    <option value="Tarea">Tarea</option>
+    <option value="Examen">Examen</option>
+</select>
+
                 </div>
             )}
 

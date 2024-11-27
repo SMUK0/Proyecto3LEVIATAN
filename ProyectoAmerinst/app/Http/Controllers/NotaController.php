@@ -33,7 +33,7 @@ public function bulkSave(Request $request)
             '*.materia_id' => 'required|exists:materias,materia_id',
             '*.maestro_id' => 'required|exists:usuarios,user_id',
             '*.nota' => 'required|numeric|min:0|max:10',
-            '*.tipo' => 'required|string|in:tarea,examen',
+            '*.tipo' => 'required|string|in:Tarea,Examen',
             '*.bimestre' => 'required|integer|min:1|max:4',
         ]);
 

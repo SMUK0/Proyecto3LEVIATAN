@@ -30,7 +30,7 @@ class NotasTableSeeder extends Seeder
                 'materia_id' => $faker->randomElement($materias),
                 'maestro_id' => $faker->randomElement($maestros),
                 'nota' => $faker->randomFloat(2, 1, 10), // Nota entre 0 y 10
-                'tipo' => $faker->randomElement(['tarea', 'examen']),
+                'tipo' => $faker->randomElement(['Tarea', 'Examen']),
                 'bimestre' => $faker->numberBetween(1, 4), // Bimestre entre 1 y 4
                 'observaciones' => $faker->optional()->sentence(), // Opcional
 

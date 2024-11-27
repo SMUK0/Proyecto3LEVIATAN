@@ -113,12 +113,12 @@ const NotasEstudiantes = () => {
 
             {/* Dropdown para seleccionar la materia */}
             <div className="form-group mb-4">
-                <label htmlFor="materia">Seleccionar Materia:</label>
+                <label htmlFor="materia" className="font-weight-bold">Seleccionar Materia:</label>
                 <select
                     id="materia"
                     value={materiaSeleccionada || ''}
                     onChange={(e) => setMateriaSeleccionada(e.target.value)}
-                    className="form-control"
+                    className="form-control shadow-sm"
                 >
                     <option value="">Todas</option>
                     {materias.map((materia) => (
@@ -132,48 +132,52 @@ const NotasEstudiantes = () => {
             <div className="row">
                 {estudiantes.map((estudiante) => (
                     <div key={estudiante.estudiante_id} className="col-md-6 col-lg-4 mb-4">
-                        <div className="card shadow-sm p-3 mb-5 bg-white rounded">
+                        <div className="card shadow-lg p-4 mb-4 bg-light rounded">
                             <div className="card-body">
-                                <h5 className="card-title">
-                                    <strong>{estudiante.nombre} {estudiante.apellido}</strong>
+                                <h5 className="card-title font-weight-bold text-primary">
+                                    {estudiante.nombre} {estudiante.apellido}
                                 </h5>
                                 <p className="card-text">
                                     <strong>ID Estudiante:</strong> {estudiante.estudiante_id}
                                 </p>
+
                                 {/* Tabla de notas */}
-                                <table className="table table-striped table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Nota</th>
-                                            <th>Materia</th>
-                                            <th>Bimestre</th>
-                                            <th>Tipo</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {notasFiltradas.filter((nota) => nota.estudiante_id === estudiante.estudiante_id).length > 0 ? (
-                                            notasFiltradas
-                                                .filter((nota) => nota.estudiante_id === estudiante.estudiante_id)
-                                                .map((nota) => (
-                                                    <tr key={nota.nota_id || nota.nota}>
-                                                        <td>{nota.nota}</td>
-                                                        <td>{nota.materia_nombre}</td>
-                                                        <td>{nota.bimestre}</td>
-                                                        <td>{nota.tipo}</td>
-                                                    </tr>
-                                                ))
-                                        ) : (
+                                <div className="table-responsive">
+                                    <table className="table table-striped table-sm">
+                                        <thead className="thead-dark">
                                             <tr>
-                                                <td colSpan="4" className="text-center">No hay notas disponibles</td>
+                                                <th>Nota</th>
+                                                <th>Materia</th>
+                                                <th>Bimestre</th>
+                                                <th>Tipo</th>
                                             </tr>
-                                        )}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {notasFiltradas.filter((nota) => nota.estudiante_id === estudiante.estudiante_id).length > 0 ? (
+                                                notasFiltradas
+                                                    .filter((nota) => nota.estudiante_id === estudiante.estudiante_id)
+                                                    .map((nota) => (
+                                                        <tr key={nota.nota_id || nota.nota}>
+                                                            <td>{nota.nota}</td>
+                                                            <td>{nota.materia_nombre}</td>
+                                                            <td>{nota.bimestre}</td>
+                                                            <td>{nota.tipo}</td>
+                                                        </tr>
+                                                    ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="4" className="text-center">No hay notas disponibles</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
+
             <ToastContainer />
         </div>
     );
