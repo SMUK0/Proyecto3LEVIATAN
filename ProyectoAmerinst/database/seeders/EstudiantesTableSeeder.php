@@ -20,7 +20,8 @@ class EstudiantesTableSeeder extends Seeder
             DB::table('estudiantes')->insert([
                 'nombre' => $faker->firstName,  // Genera un nombre falso
                 'apellido' => $faker->lastName, // Genera un apellido falso
-                'fecha_nacimiento' => $faker->date('Y-m-d', '2005-01-01'), // Fecha de nacimiento aleatoria
+                'fecha_nacimiento' => $faker->dateTimeBetween('-20 years', '-12 years')->format('Y-m-d'), 
+                // Fecha de nacimiento aleatoria
                 'curso_id' => rand(1, 3),  // Asocia al curso con un valor aleatorio entre 1 y 3
                 'created_at' => now(),
                 'updated_at' => now(),

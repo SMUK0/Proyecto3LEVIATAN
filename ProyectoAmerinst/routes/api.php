@@ -91,8 +91,8 @@ Route::post('/notas', [NotaController::class, 'getNotas']);
 
 /* Estudiante-Padres */
 Route::get('/estudiante-padres', [EstudiantePadresController::class, 'apiIndex']);
-Route::post('/estudiante-padres',[EstudiantePadresController::class, 'store']);
-Route::get('/estudiante-padres/{maestro_id}/{curso_id}', [EstudiantePadresController::class, 'show']);
+Route::post('/estudiante-padres', [EstudiantePadresController::class, 'store']);
+Route::get('/estudiante-padres/{estudiante_id}/{padre_id}', [EstudiantePadresController::class, 'show']);
 Route::put('/estudiante-padres/{estudiante_id}/{padre_id}', [EstudiantePadresController::class, 'update']);
 Route::delete('/estudiante-padres/{estudiante_id}/{padre_id}', [EstudiantePadresController::class, 'destroy']);
 
