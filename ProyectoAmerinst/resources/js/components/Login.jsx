@@ -208,20 +208,24 @@ const Login = () => {
 
       localStorage.setItem('user', JSON.stringify(data));
 
-      switch (data.rol_id) {
-        case 1:
-          window.location.href = '/administrador';
-          break;
-        case 2:
-          window.location.href = '/maestro';
-          break;
-        case 3:
-          window.location.href = '/padre';
-          break;
-        default:
-          throw new Error('Rol desconocido');
-      }
+      // Tiempo de espera de 2 segundos antes de redirigir
+      setTimeout(() => {
+        switch (data.rol_id) {
+          case 1:
+            window.location.href = '/administrador';
+            break;
+          case 2:
+            window.location.href = '/maestro';
+            break;
+          case 3:
+            window.location.href = '/padre';
+            break;
+          default:
+            throw new Error('Rol desconocido');
+        }
 
+
+      }, 3000); // 2 segundos de espera
       toast.success('Inicio de sesión exitoso!');
     } catch (err) {
       toast.error(err.message);
